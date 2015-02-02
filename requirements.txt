@@ -1,0 +1,5 @@
+asteval
+brightway2
+bw2analyzer>=0.5.2
+bw2calc
+bw2data>=1.0

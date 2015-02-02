@@ -1,0 +1,10 @@
+syntax:glob
+*.egg-info
+*.pyc
+*~
+.coverage
+build
+cover
+dist
+docs/_build
+MANIFEST
