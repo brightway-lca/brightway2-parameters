@@ -23,7 +23,7 @@ Data format:
 Processing:
 
 - ParameterSet object
-    - New astparse instance for each parameter set
+    - New asteval instance for each parameter set
 - Need to get order of parameters to be processed
 - MC needs an efficient way to insert values into various RNG output arrays
     - Do we need a new unique ID per exchange? Exchange input/output not guaranteed unique
