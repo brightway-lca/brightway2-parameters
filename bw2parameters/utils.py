@@ -13,3 +13,14 @@ def get_symbols(expression):
     nf = asteval.NameFinder()
     nf.generic_visit(interpreter.parse(expression))
     return set(nf.names).difference(EXISTING_SYMBOLS)
+
+
+try:
+    # Python 2
+    basestring
+    def isstr(s):
+        return isinstance(s, basestring)
+except NameError:
+    # Python 3
+    def isstr(s):
+        return isinstance(s, str)

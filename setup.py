@@ -8,7 +8,11 @@ setup(
     author_email="cmutel@gmail.com",
     license=open('LICENSE.txt').read(),
     url="https://bitbucket.org/cmutel/brightway2-parameters",
-    install_requires=["brightway2", "bw2data>=1.0", "bw2calc", "asteval"],
+    install_requires=[
+        "asteval",
+        "numpy",
+        "scipy"
+    ],
     long_description=open('README.rst').read(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',

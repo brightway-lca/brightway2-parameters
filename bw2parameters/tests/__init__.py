@@ -1,9 +1,22 @@
 from .. import ParameterSet
 from ..errors import *
+from ..utils import get_symbols
 import unittest
 
 
-class ValidationTestCase(unittest.TestCase):
+class UtilTestCase(unittest.TestCase):
+    def test_find_symbols(self):
+        self.assertEqual(
+            {'a', 'b', 'c'},
+            get_symbols('a * b + c')
+        )
+        self.assertEqual(
+            {'a', 'b', 'c'},
+            get_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
+        )
+
+
+class EvaluationTetstCase(unittest.TestCase):
     def test_simple_evaluation(self):
         params = [
             {
@@ -44,8 +57,9 @@ class ValidationTestCase(unittest.TestCase):
             },
         ]
         ps = ParameterSet(params)
-        print ps.evaluate()
 
+
+class ValidationTestCase(unittest.TestCase):
     def test_not_dict(self):
         with self.assertRaises(ValueError):
             ps = ParameterSet([[]])

@@ -1,5 +1,5 @@
 from .errors import *
-from .utils import get_symbols, EXISTING_SYMBOLS
+from .utils import get_symbols, EXISTING_SYMBOLS, isstr
 from asteval import Interpreter
 from numbers import Number
 from scipy.sparse import lil_matrix
@@ -68,7 +68,7 @@ class ParameterSet(object):
             if not isinstance(p, dict):
                 raise ValueError(u"Parameter {} is not a dictionary".format(p))
             elif not (isinstance(p.get('amount'), Number) or
-                    isinstance(p.get('formula'), basestring)):
+                    isstr(p.get('formula'))):
                 raise ValueError((u"Parameter {} must have either ``amount`` "
                                   u"for ``formula`` field").format(p))
             elif p.get('name') is None:
@@ -97,8 +97,8 @@ class ParameterSet(object):
                 raise SelfReference(
                     u"Formula for parameter {} references itself".format(k)
                 )
-        missing_refs = reduce(set.union, self.references.values()).difference(
-                              set(self.references.keys()))
+        missing_refs = set().union(*self.references.values()).difference(
+            set(self.references.keys()))
         if missing_refs:
             raise MissingParameter((u"Parameter(s) '{}' are referenced but "
                                     u"not defined").format(missing_refs))
