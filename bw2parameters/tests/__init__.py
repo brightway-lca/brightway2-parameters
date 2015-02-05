@@ -49,14 +49,54 @@ class EvaluationTetstCase(unittest.TestCase):
             },
             {
                 'name': 'Gag_Halfrunt',
-                'formula': 'Deep_Thought + Constant_Mown - log10(Emily_Saunders)'
+                'formula': 'Deep_Thought + Constant_Mown - log10(abs(Emily_Saunders))'
             },
             {
                 'name': 'Gargravarr',
                 'formula': 'Agrajag + Constant_Mown + Deep_Thought + East_River_Creature + Eccentrica_Gallumbits + Elders_of_Krikkit + Emily_Saunders + Gag_Halfrunt'
             },
         ]
+        ParameterSet(params).evaluate()
+
+    def test_evaluation_values(self):
+        params = [
+            {
+                'name': 'Deep_Thought',
+                'amount': 42
+            },
+            {
+                'name': 'East_River_Creature',
+                'formula': '2 * Deep_Thought + 16'
+            },
+            {
+                'name': 'Elders_of_Krikkit',
+                'formula': 'sqrt(East_River_Creature)'
+            },
+        ]
         ps = ParameterSet(params)
+        self.assertEqual(
+            {'Deep_Thought': 42, 'Elders_of_Krikkit': 10, 'East_River_Creature': 100},
+            ps.evaluate()
+        )
+
+    def test_evaluate_update_values(self):
+        params = [
+            {
+                'name': 'Deep_Thought',
+                'amount': 42
+            },
+            {
+                'name': 'East_River_Creature',
+                'formula': '2 * Deep_Thought + 16'
+            },
+            {
+                'name': 'Elders_of_Krikkit',
+                'formula': 'sqrt(East_River_Creature)'
+            },
+        ]
+        ParameterSet(params).evaluate_and_update_params()
+        self.assertEqual(params[1]['amount'], 100)
+        self.assertEqual(params[2]['amount'], 10)
 
 
 class ValidationTestCase(unittest.TestCase):

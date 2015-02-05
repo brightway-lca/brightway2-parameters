@@ -1,7 +1,9 @@
 Brightway2 parameters
 =====================
 
-Library for storing, validating, and calculating with parameters.
+Library for storing, validating, and calculating with parameters. Designed to work with the Brightway2 life cycle assessment framework, but should work for other use cases.
+
+Compatible with Python 2 & 3.
 
 Approach:
 

@@ -14,7 +14,6 @@ def get_symbols(expression):
     nf.generic_visit(interpreter.parse(expression))
     return set(nf.names).difference(EXISTING_SYMBOLS)
 
-
 try:
     # Python 2
     basestring
