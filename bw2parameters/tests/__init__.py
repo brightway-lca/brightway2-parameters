@@ -85,10 +85,10 @@ class ValidationTestCase(unittest.TestCase):
     def test_name_in_existing_symbols(self):
         with self.assertRaises(DuplicateName):
             ps = ParameterSet([
-                {'amount': 42, 'name': 'sqrt'},
+                {'amount': 42, 'name': 'log'},
             ])
 
-    def test_name_in_existing_symbols(self):
+    def test_name_already_seen(self):
         with self.assertRaises(DuplicateName):
             ps = ParameterSet([
                 {'amount': 42, 'name': 'Deep_Thought'},

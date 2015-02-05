@@ -67,11 +67,11 @@ class ParameterSet(object):
         for p in self.params:
             if not isinstance(p, dict):
                 raise ValueError(u"Parameter {} is not a dictionary".format(p))
-            if not (isinstance(p.get('amount'), Number) or
+            elif not (isinstance(p.get('amount'), Number) or
                     isinstance(p.get('formula'), basestring)):
                 raise ValueError((u"Parameter {} must have either ``amount`` "
                                   u"for ``formula`` field").format(p))
-            if p.get('name') is None:
+            elif p.get('name') is None:
                 raise MissingName(
                     u"Parameter dataset {} is missing the `name` field".format(p)
                 )
