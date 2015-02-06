@@ -64,8 +64,13 @@ Use and data formats are most easily explained in an example:
     In [8]: ds  # ``ds`` is changed even if you don't capture the returned value from ``ps(ds)``
     Out[8]:
         {'exchanges': [
-            {u'amount': 10.0, 'parameter': 'Elders_of_Krikkit'},
-            {'amount': 44}
+            {
+                'amount': 10.0,  # ``amount`` field added, value from parameter name
+                'parameter': 'Elders_of_Krikkit'
+            },
+            {
+                'amount': 44  # No parameter reference, so not touched
+            }
          ],
          'name': 'Some dataset',
          'parameters': [
