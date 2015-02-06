@@ -42,39 +42,49 @@ Use and data formats are most easily explained in an example:
 
     In [6]: ds['parameters']
     Out[6]:
-    [{'amount': 42, 'name': 'Deep_Thought'},
-     {'amount': 100,
-      'formula': '2 * Deep_Thought + 16',
-      'name': 'East_River_Creature'},
-     {'amount': 10.0,
-      'formula': 'sqrt(East_River_Creature)',
-      'name': 'Elders_of_Krikkit'}]
+        [
+         {
+            'amount': 42,
+            'name': 'Deep_Thought'
+         },
+         {
+            'amount': 100,
+            'formula': '2 * Deep_Thought + 16',
+            'name': 'East_River_Creature'
+         },
+         {
+            'amount': 10.0,
+            'formula': 'sqrt(East_River_Creature)',
+            'name': 'Elders_of_Krikkit'
+         }
+        ]
 
-    In [7]: ps(ds)  # Calling a ParameterSet object with a dataset will update exchanges
-    Out[7]:
-    {'exchanges': [{u'amount': 10.0, 'parameter': 'Elders_of_Krikkit'},
-      {'amount': 44}],
-     'name': 'Some dataset',
-     'parameters': [{'amount': 42, 'name': 'Deep_Thought'},
-      {'amount': 100,
-       'formula': '2 * Deep_Thought + 16',
-       'name': 'East_River_Creature'},
-      {'amount': 10.0,
-       'formula': 'sqrt(East_River_Creature)',
-       'name': 'Elders_of_Krikkit'}]}
+    In [7]: ignored_value = ps(ds)  # Calling a ParameterSet object with a dataset will update exchanges
 
     In [8]: ds  # ``ds`` is changed even if you don't capture the returned value from ``ps(ds)``
     Out[8]:
-    {'exchanges': [{u'amount': 10.0, 'parameter': 'Elders_of_Krikkit'},
-      {'amount': 44}],
-     'name': 'Some dataset',
-     'parameters': [{'amount': 42, 'name': 'Deep_Thought'},
-      {'amount': 100,
-       'formula': '2 * Deep_Thought + 16',
-       'name': 'East_River_Creature'},
-      {'amount': 10.0,
-       'formula': 'sqrt(East_River_Creature)',
-       'name': 'Elders_of_Krikkit'}]}
+        {'exchanges': [
+            {u'amount': 10.0, 'parameter': 'Elders_of_Krikkit'},
+            {'amount': 44}
+         ],
+         'name': 'Some dataset',
+         'parameters': [
+            {
+                'amount': 42,
+                'name': 'Deep_Thought'
+            },
+            {
+                'amount': 100,
+                'formula': '2 * Deep_Thought + 16',
+                'name': 'East_River_Creature'
+            },
+            {
+                'amount': 10.0,
+                'formula': 'sqrt(East_River_Creature)',
+                'name': 'Elders_of_Krikkit'
+            }
+         ]
+        }
 
 Note the following:
 
@@ -86,4 +96,4 @@ Note the following:
 * Monte Carlo is not yet implemented.
 * If you call a ``ParameterSet`` with a different dataset than the initialization parameters, i.e. ``ParameterSet(some_parameters)(my_new_dataset)``, the parameters will be inserted into that dataset.
 
-Brightway2-parameters is Python 2 & 3 compatible, has 100% test coverage, and is 2-clause BSD licensed and free.
+Brightway2-parameters is Python 2 & 3 compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__.
