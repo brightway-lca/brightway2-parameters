@@ -4,6 +4,79 @@ from ..utils import get_symbols
 import unittest
 
 
+class CallParameterSetTestCase(unittest.TestCase):
+    def test_call_updates_exchanges(self):
+        ds = {
+            'name': 'Some dataset',
+            'parameters': [
+                {
+                    'name': 'Deep_Thought',
+                    'amount': 42
+                },
+                {
+                    'name': 'East_River_Creature',
+                    'formula': '2 * Deep_Thought + 16'
+                },
+                {
+                    'name': 'Elders_of_Krikkit',
+                    'formula': 'sqrt(East_River_Creature)'
+                },
+            ],
+            'exchanges': [
+                {
+                   'parameter': 'Elders_of_Krikkit'
+                },
+                {
+                    'amount': 44
+                }
+            ]
+        }
+        ds = ParameterSet(ds['parameters'])(ds)
+        self.assertEqual(ds['exchanges'][0], {'amount': 10, 'parameter': 'Elders_of_Krikkit'})
+        self.assertEqual(ds['exchanges'][1], {'amount': 44})
+
+    def test_call_inserts_exchanges(self):
+        ds = {
+            'parameters': [
+                {
+                    'name': 'Deep_Thought',
+                    'amount': 42
+                },
+                {
+                    'name': 'East_River_Creature',
+                    'formula': '2 * Deep_Thought + 16'
+                },
+                {
+                    'name': 'Elders_of_Krikkit',
+                    'formula': 'sqrt(East_River_Creature)'
+                },
+            ]
+        }
+        new_ds = {}
+        ds = ParameterSet(ds['parameters'])(new_ds)
+        self.assertTrue('parameters' in new_ds)
+
+    def test_call_no_exchanges(self):
+        ds = {
+            'parameters': [
+                {
+                    'name': 'Deep_Thought',
+                    'amount': 42
+                },
+                {
+                    'name': 'East_River_Creature',
+                    'formula': '2 * Deep_Thought + 16'
+                },
+                {
+                    'name': 'Elders_of_Krikkit',
+                    'formula': 'sqrt(East_River_Creature)'
+                },
+            ]
+        }
+        ds = ParameterSet(ds['parameters'])(ds)
+        self.assertFalse('exchanges' in ds)
+
+
 class UtilTestCase(unittest.TestCase):
     def test_find_symbols(self):
         self.assertEqual(

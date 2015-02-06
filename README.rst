@@ -1,33 +1,13 @@
 Brightway2 parameters
 =====================
 
-Library for storing, validating, and calculating with parameters. Designed to work with the Brightway2 life cycle assessment framework, but should work for other use cases.
+Library for storing, validating, and calculating with parameters. Designed to work with the `Brightway2 life cycle assessment framework <http://brightway2.readthedocs.org/en/latest/>`__, but should work for other use cases.
 
-Compatible with Python 2 & 3. `Source code on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__.
+Compatible with Python 2 & 3, tested on 2.7, 3.3, and 3.4. 100% test coverage. `Source code on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__, documentation on `Read the Docs <example.com>`__.
 
-Approach:
-
-- Parameters are defined in a dataset: ds['parameters']
-- No global parameters
-- No inheritance between datasets
-
-Data format:
-- ds['parameters'] is a list of parameters
-- 'name' field (must be unique)
-    - 'name' can be generated automatically on import
-    - 'name' can't copy function names (long list)
-- optional 'formula' field
-- 'formula' must use numpy (i.e. array) compatible functions
-- Parameters have normal uncertainty fields
-- An exchange can reference a parameter name (but not a formula)
-    - No uncertainty if referencing a parameter
-
-Processing:
-
-- ParameterSet object
-    - New asteval instance for each parameter set
-- Need to get order of parameters to be processed
-- MC needs an efficient way to insert values into various RNG output arrays
-    - Do we need a new unique ID per exchange? Exchange input/output not guaranteed unique
-    - Or somehow do something tricky during processing step?
-    - Rewrite main MonteCarlo class to have view into PV lca?
+Todo:
+* Show where there are circular references
+* MC needs an efficient way to insert values into various RNG output arrays
+    * Do we need a new unique ID per exchange? Exchange input/output not guaranteed unique
+    * Or somehow do something tricky during processing step?
+    * Rewrite main MonteCarlo class to have view into PV lca?

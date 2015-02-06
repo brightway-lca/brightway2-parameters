@@ -103,7 +103,7 @@ class ParameterSet(object):
             raise MissingParameter((u"Parameter(s) '{}' are referenced but "
                                     u"not defined").format(missing_refs))
         if not self.test_no_circular_references():
-            # TODO
+            # TODO: Show where there are circular references
             # raise CircularReference(
             #     u"Parameters {} have a circular reference".format(
             #         self.find_circular_references()
@@ -114,7 +114,7 @@ class ParameterSet(object):
             )
 
     def evaluate(self):
-        """Evaluate each formula. Returns """
+        """Evaluate each formula. Returns dictionary of parameter names and values."""
         interpreter = Interpreter()
         result = {}
         params_as_dict = {p['name']: p for p in self.params}
@@ -127,6 +127,18 @@ class ParameterSet(object):
         return result
 
     def evaluate_and_update_params(self):
+        """Evaluate each formula. Updates the ``amount`` field of each parameter."""
         result = self.evaluate()
         for p in self.params:
             p['amount'] = result[p['name']]
+
+    def __call__(self, ds):
+        """Evaluate each forumla, and update ``exchanges`` if they reference a ``parameter`` name."""
+        self.evaluate_and_update_params()
+        ds[u'parameters'] = self.params
+        pd = {obj['name']: obj['amount'] for obj in self.params}
+        for exc in ds.get('exchanges', []):
+            if exc.get('parameter') in pd:
+                exc[u'amount'] = pd[exc['parameter']]
+        # Changes in-place, but return anyway
+        return ds
