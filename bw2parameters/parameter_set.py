@@ -119,11 +119,14 @@ class ParameterSet(object):
         result = {}
         params_as_dict = {p['name']: p for p in self.params}
         for p in self.order:
-            if not self.references[p]:
-                interpreter.symtable[p] = result[p] = params_as_dict[p]['amount']
-            else:
+            if params_as_dict[p].get('formula'):
                 value = interpreter(params_as_dict[p]['formula'])
                 interpreter.symtable[p] = result[p] = value
+            elif 'amount' in params_as_dict[p]:
+                interpreter.symtable[p] = result[p] = params_as_dict[p]['amount']
+            else:
+                raise ValueError(u"No suitable formula or static amount found "
+                                 u"in {}".format(p))
         return result
 
     def evaluate_and_update_params(self):
@@ -133,7 +136,7 @@ class ParameterSet(object):
             p['amount'] = result[p['name']]
 
     def __call__(self, ds):
-        """Evaluate each forumla, and update ``exchanges`` if they reference a ``parameter`` name."""
+        """Evaluate each formula, and update ``exchanges`` if they reference a ``parameter`` name."""
         self.evaluate_and_update_params()
         ds[u'parameters'] = self.params
         pd = {obj['name']: obj['amount'] for obj in self.params}
