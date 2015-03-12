@@ -2,6 +2,7 @@ from .errors import *
 from .utils import get_symbols, EXISTING_SYMBOLS, isstr
 from asteval import Interpreter
 from numbers import Number
+from pprint import pformat
 from scipy.sparse import lil_matrix
 from scipy.sparse.csgraph import connected_components
 
@@ -18,13 +19,22 @@ class ParameterSet(object):
         order = []
         seen = set()
         refs = self.references.copy()
+
         while refs:
+            last_iteration = set(refs.keys())
             for k, v in refs.items():
                 if not v.difference(seen):
                     seen.add(k)
                     order.append(k)
+                    refs.pop(k)
                     break
-            refs.pop(k)
+            if not last_iteration.difference(set(refs.keys())):
+                raise ValueError((u"Undefined references for the following:"
+                                  u"\n{}\nExisting references:\n{}").format(
+                                  pformat(refs, indent=2),
+                                  pformat(order, indent=2)
+                ))
+
         return order
 
     def get_references(self):
