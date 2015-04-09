@@ -150,8 +150,13 @@ class ParameterSet(object):
         self.evaluate_and_update_params()
         ds[u'parameters'] = self.params
         pd = {obj['name']: obj['amount'] for obj in self.params}
+
+        # Evaluate formulas in exchanges
+        interpreter = Interpreter()
+        for obj in self.params:
+            interpreter.symtable[obj['name']] = obj['amount']
         for exc in ds.get('exchanges', []):
-            if exc.get('parameter') in pd:
-                exc[u'amount'] = pd[exc['parameter']]
+            if 'formula' in exc and 'amount' not in exc:
+                exc[u'amount'] = interpreter(exc['formula'])
         # Changes in-place, but return anyway
         return ds

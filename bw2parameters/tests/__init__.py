@@ -24,7 +24,7 @@ class CallParameterSetTestCase(unittest.TestCase):
             ],
             'exchanges': [
                 {
-                   'parameter': 'Elders_of_Krikkit'
+                   'formula': 'Elders_of_Krikkit'
                 },
                 {
                     'amount': 44
@@ -32,10 +32,10 @@ class CallParameterSetTestCase(unittest.TestCase):
             ]
         }
         ds = ParameterSet(ds['parameters'])(ds)
-        self.assertEqual(ds['exchanges'][0], {'amount': 10, 'parameter': 'Elders_of_Krikkit'})
+        self.assertEqual(ds['exchanges'][0], {'amount': 10, 'formula': 'Elders_of_Krikkit'})
         self.assertEqual(ds['exchanges'][1], {'amount': 44})
 
-    def test_call_inserts_exchanges(self):
+    def test_call_inserts_parameters(self):
         ds = {
             'parameters': [
                 {
@@ -223,11 +223,10 @@ class ValidationTestCase(unittest.TestCase):
             ])
 
     def test_self_reference(self):
-        ps = ParameterSet([
-            {'formula': '2 * Elders_of_Krikkit', 'name': 'Elders_of_Krikkit'},
-        ])
         with self.assertRaises(SelfReference):
-            ps.validate()
+            ParameterSet([
+                {'formula': '2 * Elders_of_Krikkit', 'name': 'Elders_of_Krikkit'},
+            ])
 
     def test_missing_reference(self):
         ps = ParameterSet([
