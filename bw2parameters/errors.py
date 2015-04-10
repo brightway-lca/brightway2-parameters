@@ -2,7 +2,7 @@ class ValidationError(Exception):
     pass
 
 
-class CircularReference(ValidationError):
+class ParameterError(ValidationError):
     pass
 
 
@@ -15,8 +15,4 @@ class MissingName(ValidationError):
 
 
 class SelfReference(ValidationError):
-    pass
-
-
-class MissingParameter(ValidationError):
     pass

@@ -12,6 +12,12 @@ class ParameterSet(object):
         self.params = params
         self.basic_validation()
         self.references = self.get_references()
+        for name, references in self.references.items():
+            if name in references:
+                raise SelfReference(
+                    u"Formula for parameter {} references itself".format(name)
+                )
+
         self.order = self.get_order()
 
     def get_order(self):
@@ -29,7 +35,7 @@ class ParameterSet(object):
                     refs.pop(k)
                     break
             if not last_iteration.difference(set(refs.keys())):
-                raise ValueError((u"Undefined references for the following:"
+                raise ParameterError((u"Undefined or circular references for the following:"
                                   u"\n{}\nExisting references:\n{}").format(
                                   pformat(refs, indent=2),
                                   pformat(order, indent=2)
@@ -110,16 +116,11 @@ class ParameterSet(object):
         missing_refs = set().union(*self.references.values()).difference(
             set(self.references.keys()))
         if missing_refs:
-            raise MissingParameter((u"Parameter(s) '{}' are referenced but "
+            raise ParameterError((u"Parameter(s) '{}' are referenced but "
                                     u"not defined").format(missing_refs))
         if not self.test_no_circular_references():
             # TODO: Show where there are circular references
-            # raise CircularReference(
-            #     u"Parameters {} have a circular reference".format(
-            #         self.find_circular_references()
-            #     )
-            # )
-            raise CircularReference(
+            raise ParameterError(
                 u"Parameters have a circular reference"
             )
 

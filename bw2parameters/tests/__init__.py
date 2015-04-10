@@ -229,17 +229,15 @@ class ValidationTestCase(unittest.TestCase):
             ])
 
     def test_missing_reference(self):
-        ps = ParameterSet([
-            {'formula': '2 * Ford_Prefect', 'name': 'Elders_of_Krikkit'},
-        ])
-        with self.assertRaises(MissingParameter):
-            ps.validate()
+        with self.assertRaises(ParameterError):
+            ps = ParameterSet([
+                {'formula': '2 * Ford_Prefect', 'name': 'Elders_of_Krikkit'},
+            ])
 
     def test_circular_reference(self):
-        ps = ParameterSet([
-            {'formula': '2 * Agrajag', 'name': 'Elders_of_Krikkit'},
-            {'formula': '2 * Elders_of_Krikkit', 'name': 'East_River_Creature'},
-            {'formula': '2 * East_River_Creature', 'name': 'Agrajag'},
-        ])
-        with self.assertRaises(CircularReference):
-            ps.validate()
+        with self.assertRaises(ParameterError):
+            ps = ParameterSet([
+                {'formula': '2 * Agrajag', 'name': 'Elders_of_Krikkit'},
+                {'formula': '2 * Elders_of_Krikkit', 'name': 'East_River_Creature'},
+                {'formula': '2 * East_River_Creature', 'name': 'Agrajag'},
+            ])
