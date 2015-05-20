@@ -30,12 +30,12 @@ You can also use and reference global constants. This is useful when sharing som
     In [6]: ParameterSet(parameters, global_parameters).evaluate()
     Out[6]: {'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
 
-You can call a ``ParameterSet`` with a list of new variables and formulas. Note that this new list cannot have reference to itself, only to the parameter set defined earlier:
+You can call a ``ParameterSet`` with a list of new variables and formulas. Note that this new list cannot have reference to itself, only to the parameter set defined earlier. Calling set the ``amount`` field in the new list:
 
 .. code-block:: python
 
     In [7]: another_parameter_list = [
-       ...:         {'formula': 'East_River_Creature + Elders_of_Krikkit'},
+       ...:     {'formula': 'East_River_Creature + Elders_of_Krikkit'},
        ...:     {'formula': '42 - Elders_of_Krikkit'},
        ...:     {'something else': "won't change"}
        ...: ]
@@ -58,8 +58,7 @@ Finally, you can modify the parameters dictionary by adding an ``amount`` field 
     In [11]: parameters
     Out[11]:
     {'East_River_Creature': {u'amount': 100, 'formula': '2 * Deep_Thought + 16'},
-     'Elders_of_Krikkit': {u'amount': 10.0,
-      'formula': 'sqrt(East_River_Creature)'}}
+     'Elders_of_Krikkit': {u'amount': 10.0, 'formula': 'sqrt(East_River_Creature)'}}
 
 Note the following:
 
