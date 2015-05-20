@@ -1,6 +1,8 @@
+# -*- coding: utf-8 -*-
 from .. import ParameterSet
 from ..errors import *
-from ..utils import get_symbols
+from ..utils import get_symbols, isidentifier
+import sys
 import unittest
 
 
@@ -8,70 +10,31 @@ class CallParameterSetTestCase(unittest.TestCase):
     def test_call_updates_exchanges(self):
         ds = {
             'name': 'Some dataset',
-            'parameters': [
-                {
-                    'name': 'Deep_Thought',
-                    'amount': 42
-                },
-                {
-                    'name': 'East_River_Creature',
-                    'formula': '2 * Deep_Thought + 16'
-                },
-                {
-                    'name': 'Elders_of_Krikkit',
-                    'formula': 'sqrt(East_River_Creature)'
-                },
-            ],
+            'parameters': {
+                'Deep_Thought': {'amount': 42},
+                'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+                'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+            },
             'exchanges': [
-                {
-                   'formula': 'Elders_of_Krikkit'
-                },
-                {
-                    'amount': 44
-                }
+                {'formula': 'Elders_of_Krikkit'},
+                {'amount': 44}
             ]
         }
-        ds = ParameterSet(ds['parameters'])(ds)
+        ParameterSet(ds['parameters'])(ds['exchanges'])
+        self.assertEqual(
+            ds['parameters']['East_River_Creature'],
+            {'amount': 100, 'formula': '2 * Deep_Thought + 16'}
+        )
         self.assertEqual(ds['exchanges'][0], {'amount': 10, 'formula': 'Elders_of_Krikkit'})
         self.assertEqual(ds['exchanges'][1], {'amount': 44})
 
-    def test_call_inserts_parameters(self):
-        ds = {
-            'parameters': [
-                {
-                    'name': 'Deep_Thought',
-                    'amount': 42
-                },
-                {
-                    'name': 'East_River_Creature',
-                    'formula': '2 * Deep_Thought + 16'
-                },
-                {
-                    'name': 'Elders_of_Krikkit',
-                    'formula': 'sqrt(East_River_Creature)'
-                },
-            ]
-        }
-        new_ds = {}
-        ds = ParameterSet(ds['parameters'])(new_ds)
-        self.assertTrue('parameters' in new_ds)
-
     def test_call_no_exchanges(self):
         ds = {
-            'parameters': [
-                {
-                    'name': 'Deep_Thought',
-                    'amount': 42
-                },
-                {
-                    'name': 'East_River_Creature',
-                    'formula': '2 * Deep_Thought + 16'
-                },
-                {
-                    'name': 'Elders_of_Krikkit',
-                    'formula': 'sqrt(East_River_Creature)'
-                },
-            ]
+            'parameters': {
+                'Deep_Thought': {'amount': 42},
+                'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+                'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+            }
         }
         ds = ParameterSet(ds['parameters'])(ds)
         self.assertFalse('exchanges' in ds)
@@ -88,64 +51,58 @@ class UtilTestCase(unittest.TestCase):
             get_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
         )
 
+    def test_isidentifier(self):
+        self.assertTrue(isidentifier('foo'))
+        self.assertTrue(isidentifier('foo1_23'))
+        self.assertFalse(isidentifier('pass'))    # syntactically correct keyword
+        self.assertFalse(isidentifier('foo '))    # trailing whitespace
+        self.assertFalse(isidentifier(' foo'))    # leading whitespace
+        self.assertFalse(isidentifier('1234'))    # number
+        self.assertFalse(isidentifier('1234abc')) # number and letters
+        self.assertFalse(isidentifier(u'👻'))      # Unicode not from allowed range
+        self.assertFalse(isidentifier(''))        # empty string
+        self.assertFalse(isidentifier('   '))     # whitespace only
+        self.assertFalse(isidentifier('foo bar')) # several tokens
+        self.assertFalse(isidentifier('no-dashed-names-for-you')) # no such thing in Python
 
-class EvaluationTetstCase(unittest.TestCase):
+        if sys.version_info < (3, 0):
+            # Unicode identifiers are only allowed in Python 3:
+            self.assertFalse(isidentifier(u'℘᧚'))
+        else:
+            # Unicode identifiers are only allowed in Python 3:
+            self.assertTrue(isidentifier(u'℘᧚'))
+
+        with self.assertRaises(TypeError):
+            isidentifier(3)
+
+class EvaluationTestCase(unittest.TestCase):
     def test_simple_evaluation(self):
-        params = [
-            {
-                'name': 'Agrajag',
-                'amount': 3.14
-            },
-            {
-                'name': 'Constant_Mown',
-                'amount': 0.001
-            },
-            {
-                'name': 'Deep_Thought',
-                'amount': 42
-            },
-            {
-                'name': 'East_River_Creature',
-                'formula': '2 * Agrajag ** 2'
-            },
-            {
-                'name': 'Eccentrica_Gallumbits',
-                'formula': '1 / sqrt(Constant_Mown)'
-            },
-            {
-                'name': 'Elders_of_Krikkit',
+        params = {
+            'Agrajag': {'amount': 3.14},
+            'Constant_Mown': {'amount': 0.001},
+            'Deep_Thought': {'amount': 42},
+            'East_River_Creature': {'formula': '2 * Agrajag ** 2'},
+            'Eccentrica_Gallumbits': {'formula': '1 / sqrt(Constant_Mown)'},
+            'Elders_of_Krikkit': {
                 'formula': 'East_River_Creature + Eccentrica_Gallumbits'
             },
-            {
-                'name': 'Emily_Saunders',
-                'formula': 'sin(Deep_Thought) + 7 - Elders_of_Krikkit'
-            },
-            {
-                'name': 'Gag_Halfrunt',
+            'Emily_Saunders': {'formula': 'sin(Deep_Thought) + 7 - Elders_of_Krikkit'},
+            'Gag_Halfrunt': {
                 'formula': 'Deep_Thought + Constant_Mown - log10(abs(Emily_Saunders))'
             },
-            {
-                'name': 'Gargravarr',
-                'formula': 'Agrajag + Constant_Mown + Deep_Thought + East_River_Creature + Eccentrica_Gallumbits + Elders_of_Krikkit + Emily_Saunders + Gag_Halfrunt'
-            },
-        ]
+            'Gargravarr': {
+                'formula': ('Agrajag + Constant_Mown + Deep_Thought + '
+                            'East_River_Creature + Eccentrica_Gallumbits + '
+                            'Elders_of_Krikkit + Emily_Saunders + Gag_Halfrunt')}
+        }
         ParameterSet(params).evaluate()
 
     def test_evaluation_values(self):
-        params = [
-            {
-                'name': 'Deep_Thought',
-                'amount': 42
-            },
-            {
-                'name': 'East_River_Creature',
-                'formula': '2 * Deep_Thought + 16'
-            },
-            {
-                'name': 'Elders_of_Krikkit',
-                'formula': 'sqrt(East_River_Creature)'
-            },
-        ]
+        params = {
+            'Deep_Thought': {'amount': 42},
+            'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+            'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+        }
         ps = ParameterSet(params)
         self.assertEqual(
             {'Deep_Thought': 42, 'Elders_of_Krikkit': 10, 'East_River_Creature': 100},
@@ -153,33 +110,24 @@ class EvaluationTetstCase(unittest.TestCase):
         )
 
     def test_evaluate_update_values(self):
-        params = [
-            {
-                'name': 'Deep_Thought',
-                'amount': 42
-            },
-            {
-                'name': 'East_River_Creature',
-                'formula': '2 * Deep_Thought + 16'
-            },
-            {
-                'name': 'Elders_of_Krikkit',
-                'formula': 'sqrt(East_River_Creature)'
-            },
-        ]
-        ParameterSet(params).evaluate_and_update_params()
-        self.assertEqual(params[1]['amount'], 100)
-        self.assertEqual(params[2]['amount'], 10)
+        params = {
+            'Deep_Thought': {'amount': 42},
+            'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+            'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+        }
+        ParameterSet(params).evaluate_and_set_amount_field()
+        self.assertEqual(params['East_River_Creature']['amount'], 100)
+        self.assertEqual(params['Elders_of_Krikkit']['amount'], 10)
 
 
-class ValidationTestCase(unittest.TestCase):
+class BasicValidationTestCase(unittest.TestCase):
     def test_not_dict(self):
         with self.assertRaises(ValueError):
-            ps = ParameterSet([[]])
+            ps = ParameterSet([])
 
     def test_missing_fields(self):
         with self.assertRaises(ValueError):
-            ps = ParameterSet([{}])
+            ps = ParameterSet({'': {}})
         with self.assertRaises(ValueError):
             ps = ParameterSet([
                 {'amount': 1, 'name': 'Gag_Halfrunt'},
@@ -191,53 +139,64 @@ class ValidationTestCase(unittest.TestCase):
                 {'name': 'Constant_Mown'}
             ])
 
-    def test_missing_name(self):
-        ps = ParameterSet([
-            {'formula': '2 * pi', 'name': 'Deep_Thought'},
-        ])
-        with self.assertRaises(MissingName):
-            ps = ParameterSet([
-                {'formula': '2 * pi'},
-            ])
+    def test_not_dict(self):
+        with self.assertRaises(ValueError):
+            ps = ParameterSet({'Deep Thought': 42})
 
     def test_space_in_name(self):
-        ps = ParameterSet([
-            {'amount': 42, 'name': 'Deep_Thought'},
-        ])
+        ps = ParameterSet({'Deep_Thought': {'amount': 42}})
         with self.assertRaises(ValueError):
-            ps = ParameterSet([
-                {'amount': 42, 'name': 'Deep Thought'},
-            ])
+            ps = ParameterSet({'Deep Thought': {'amount': 42}})
 
     def test_name_in_existing_symbols(self):
         with self.assertRaises(DuplicateName):
-            ps = ParameterSet([
-                {'amount': 42, 'name': 'log'},
-            ])
-
-    def test_name_already_seen(self):
-        with self.assertRaises(DuplicateName):
-            ps = ParameterSet([
-                {'amount': 42, 'name': 'Deep_Thought'},
-                {'amount': 4.2, 'name': 'Deep_Thought'},
-            ])
+            ps = ParameterSet({'log': {'amount': 1}})
 
     def test_self_reference(self):
         with self.assertRaises(SelfReference):
-            ParameterSet([
-                {'formula': '2 * Elders_of_Krikkit', 'name': 'Elders_of_Krikkit'},
-            ])
+            ParameterSet({'Elders_of_Krikkit': {'formula': '2 * Elders_of_Krikkit'}})
 
     def test_missing_reference(self):
         with self.assertRaises(ParameterError):
-            ps = ParameterSet([
-                {'formula': '2 * Ford_Prefect', 'name': 'Elders_of_Krikkit'},
-            ])
+            ps = ParameterSet({'Elders_of_Krikkit': {'formula': '2 * Ford_Prefect'}})
 
     def test_circular_reference(self):
         with self.assertRaises(ParameterError):
-            ps = ParameterSet([
-                {'formula': '2 * Agrajag', 'name': 'Elders_of_Krikkit'},
-                {'formula': '2 * Elders_of_Krikkit', 'name': 'East_River_Creature'},
-                {'formula': '2 * East_River_Creature', 'name': 'Agrajag'},
-            ])
+            ps = ParameterSet({
+                'Elders_of_Krikkit': {'formula': '2 * Agrajag'},
+                'East_River_Creature': {'formula': '2 * Elders_of_Krikkit'},
+                'Agrajag': {'formula': '2 * East_River_Creature'},
+            })
+
+    def test_capitaliation_error(self):
+        with self.assertRaises(CapitalizationError):
+            ps = ParameterSet({
+                'Elders_of_Krikkit': {'formula': '2 * Agrajag'},
+                'agrajag': {'amount': 2},
+            })
+
+
+class GlobalParametersTestCase(unittest.TestCase):
+    def test_non_numeric(self):
+        with self.assertRaises(ValueError):
+            ps = ParameterSet({
+                'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+                'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+            }, {'Deep': 'Thought'})
+
+    def test_nonidentifier(self):
+        with self.assertRaises(ValueError):
+            ps = ParameterSet({
+                'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+                'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+            }, {'Deep Thought': 2.4})
+
+    def test_evaluate(self):
+        ps = ParameterSet({
+            'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+            'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+        }, {'Deep_Thought': 42})
+        self.assertEqual(
+            ps.evaluate(),
+            {'East_River_Creature': 100, 'Elders_of_Krikkit': 10}
+        )

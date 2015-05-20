@@ -1,5 +1,6 @@
+# -*- coding: utf-8 -*-
 from .errors import *
-from .utils import get_symbols, EXISTING_SYMBOLS, isstr
+from .utils import get_symbols, EXISTING_SYMBOLS, isstr, isidentifier
 from asteval import Interpreter
 from numbers import Number
 from pprint import pformat
@@ -8,8 +9,9 @@ from scipy.sparse.csgraph import connected_components
 
 
 class ParameterSet(object):
-    def __init__(self, params):
+    def __init__(self, params, global_params=None):
         self.params = params
+        self.global_params = global_params or {}
         self.basic_validation()
         self.references = self.get_references()
         for name, references in self.references.items():
@@ -35,129 +37,151 @@ class ParameterSet(object):
                     refs.pop(k)
                     break
             if not last_iteration.difference(set(refs.keys())):
+                found_lower_case = {obj.lower(): obj for obj in order}
+                wrong_case = [(obj, found_lower_case[obj.lower()])
+                              for references in refs.values()
+                              for obj in references
+                              if obj.lower() in found_lower_case]
+                if wrong_case:
+                    raise CapitalizationError(u"Possible errors in upper/lower " + \
+                        u"case letters for some parameters.\n" + \
+                        u"\n".join([
+                            u"'{}'' not found; could be '{}'".format(a, b)
+                            for a, b in wrong_case
+                        ])
+                    )
                 raise ParameterError((u"Undefined or circular references for the following:"
-                                  u"\n{}\nExisting references:\n{}").format(
-                                  pformat(refs, indent=2),
-                                  pformat(order, indent=2)
+                                      u"\n{}\nExisting references:\n{}").format(
+                                      pformat(refs, indent=2),
+                                      pformat(sorted(order), indent=2)
                 ))
 
         return order
 
     def get_references(self):
         """Create dictionary of parameter references"""
-        return {p['name']: get_symbols(p['formula'])
-                if p.get('formula')
-                else set()
-                for p in self.params}
-
-    def mapping(self):
-        """Map sorted parameter names to integer indices"""
-        return {n: i for i, n in enumerate(sorted([obj['name'] for obj in
-                                                   self.params]))}
-
-    def to_csgraph(self):
-        """Create sparse matrix graph representation of formula references"""
-        mapping = self.mapping()
-        matrix = lil_matrix((len(mapping), len(mapping)))
-        for name, row in mapping.items():
-            for reference in self.references[name]:
-                matrix[row, mapping[reference]] = 1
-        return matrix.tocsr()
-
-    def test_no_circular_references(self):
-        """Check if the given parameter set has circular references.
-
-        Returns ``True`` if no circular references are present."""
-        graph = self.to_csgraph()
-        # ``connected_components`` returns number of strongly connected subgraphs
-        # if there are no cycles, then this will be the same as the number of
-        # parameters. See http://en.wikipedia.org/wiki/Strongly_connected_component
-        return connected_components(graph,
-                                    connection='strong',
-                                    return_labels=False
-                                    ) == graph.shape[0]
+        refs = {key: get_symbols(value['formula'])
+                if value.get('formula') else set()
+                for key, value in self.params.items()}
+        refs.update({key: set() for key in self.global_params})
+        return refs
 
     def basic_validation(self):
         """Basic validation needed to build ``references`` and ``order``"""
-        seen = set()
-        for p in self.params:
-            if not isinstance(p, dict):
-                raise ValueError(u"Parameter {} is not a dictionary".format(p))
-            elif not (isinstance(p.get('amount'), Number) or
-                    isstr(p.get('formula'))):
+        if not isinstance(self.params, dict):
+            raise ValueError(u"Parameters are not a dictionary")
+        if not isinstance(self.global_params, dict):
+            raise ValueError(u"Global parameters are not a dictionary")
+        for key, value in self.params.items():
+            if not isinstance(value, dict):
+                raise ValueError(u"Parameter value {} is not a dictionary".format(key))
+            elif not (isinstance(value.get('amount'), Number) or
+                    isstr(value.get('formula'))):
                 raise ValueError((u"Parameter {} must have either ``amount`` "
-                                  u"for ``formula`` field").format(p))
-            elif p.get('name') is None:
-                raise MissingName(
-                    u"Parameter dataset {} is missing the `name` field".format(p)
-                )
-            # TODO: Other illegal characters?
-            elif u" " in p['name']:
+                                  u"for ``formula`` field").format(key))
+            elif not isidentifier(key):
                 raise ValueError(
-                    "Parameter name {} has a space".format(p['name'])
+                    u"Parameter label {} not a valid Python name".format(key)
                 )
-            elif p['name'] in EXISTING_SYMBOLS:
+            elif key in EXISTING_SYMBOLS:
                 raise DuplicateName(
-                    u"Parameter name {} is a built-in symbol".format(p['name'])
+                    u"Parameter name {} is a built-in symbol".format(key)
                 )
-            elif p['name'] in seen:
-                raise DuplicateName(
-                    u"Parameter {} is defined twice".format(p['name'])
-                )
-            seen.add(p['name'])
-
-    def validate(self):
-        """Check parameter set is valid. Raises a validation error if necessary."""
-        for k, v in self.references.items():
-            if k in v:
-                raise SelfReference(
-                    u"Formula for parameter {} references itself".format(k)
-                )
-        missing_refs = set().union(*self.references.values()).difference(
-            set(self.references.keys()))
-        if missing_refs:
-            raise ParameterError((u"Parameter(s) '{}' are referenced but "
-                                    u"not defined").format(missing_refs))
-        if not self.test_no_circular_references():
-            # TODO: Show where there are circular references
-            raise ParameterError(
-                u"Parameters have a circular reference"
-            )
+        for key, value in self.global_params.items():
+            if not isinstance(value, Number):
+                raise ValueError((u"Global parameter {} does not have a "
+                                  u"numeric value: {}").format(key, value))
+            elif not isidentifier(key):
+                raise ValueError((u"Global parameter label {} not a valid "
+                                  u"Python name").format(key))
 
     def evaluate(self):
         """Evaluate each formula. Returns dictionary of parameter names and values."""
         interpreter = Interpreter()
         result = {}
-        params_as_dict = {p['name']: p for p in self.params}
-        for p in self.order:
-            if params_as_dict[p].get('formula'):
-                value = interpreter(params_as_dict[p]['formula'])
-                interpreter.symtable[p] = result[p] = value
-            elif 'amount' in params_as_dict[p]:
-                interpreter.symtable[p] = result[p] = params_as_dict[p]['amount']
+        for key in self.order:
+            if key in self.global_params:
+                interpreter.symtable[key] = self.global_params[key]
+            elif self.params[key].get('formula'):
+                value = interpreter(self.params[key]['formula'])
+                interpreter.symtable[key] = result[key] = value
+            elif 'amount' in self.params[key]:
+                interpreter.symtable[key] = result[key] = self.params[key]['amount']
             else:
                 raise ValueError(u"No suitable formula or static amount found "
-                                 u"in {}".format(p))
+                                 u"in {}".format(key))
         return result
 
-    def evaluate_and_update_params(self):
+    def evaluate_and_set_amount_field(self):
         """Evaluate each formula. Updates the ``amount`` field of each parameter."""
         result = self.evaluate()
-        for p in self.params:
-            p['amount'] = result[p['name']]
+        for key, value in self.params.items():
+            value[u'amount'] = result[key]
+        return result
 
-    def __call__(self, ds):
+    def __call__(self, ds=None):
         """Evaluate each formula, and update ``exchanges`` if they reference a ``parameter`` name."""
-        self.evaluate_and_update_params()
-        ds[u'parameters'] = self.params
-        pd = {obj['name']: obj['amount'] for obj in self.params}
+        if ds is None:
+            return self.evaluate_and_set_amount_field()
+
+        self.evaluate_and_set_amount_field()
 
         # Evaluate formulas in exchanges
         interpreter = Interpreter()
-        for obj in self.params:
-            interpreter.symtable[obj['name']] = obj['amount']
-        for exc in ds.get('exchanges', []):
-            if 'formula' in exc and 'amount' not in exc:
-                exc[u'amount'] = interpreter(exc['formula'])
+        for key, value in self.global_params.items():
+            interpreter.symtable[key] = value
+        for key, value in self.params.items():
+            interpreter.symtable[key] = value['amount']
+        for obj in ds:
+            if 'formula' in obj and 'amount' not in obj:
+                obj[u'amount'] = interpreter(obj['formula'])
+
         # Changes in-place, but return anyway
         return ds
+
+    # This is now all done by basic_validation
+    # Code kept in case useful in future
+
+    # def validate(self):
+    #     """Check parameter set is valid. Raises a validation error if necessary."""
+    #     for key, value in self.references.items():
+    #         if key in value:
+    #             raise SelfReference(
+    #                 u"Formula for parameter {} references itself".format(key)
+    #             )
+    #     missing_refs = set().union(*self.references.values()).difference(
+    #         set(self.references.keys()))
+    #     if missing_refs:
+    #         raise ParameterError((u"Parameter(s) '{}' are referenced but "
+    #                               u"not defined").format(missing_refs))
+    #     if not self.test_no_circular_references():
+    #         # TODO: Show where there are circular references
+    #         raise ParameterError(
+    #             u"Parameters have a circular reference"
+    #         )
+
+    # def mapping(self):
+    #     """Map sorted parameter names to integer indices"""
+    #     return {n: i for i, n in enumerate(sorted(self.params.keys()))}
+
+    # def to_csgraph(self):
+    #     """Create sparse matrix graph representation of formula references"""
+    #     mapping = self.mapping()
+    #     matrix = lil_matrix((len(mapping), len(mapping)))
+    #     for name, row in mapping.items():
+    #         for reference in self.references[name]:
+    #             matrix[row, mapping[reference]] = 1
+    #     return matrix.tocsr()
+
+    # def test_no_circular_references(self):
+    #     """Check if the given parameter set has circular references.
+
+    #     Returns ``True`` if no circular references are present."""
+    #     graph = self.to_csgraph()
+    #     # ``connected_components`` returns number of strongly connected subgraphs
+    #     # if there are no cycles, then this will be the same as the number of
+    #     # parameters. See http://en.wikipedia.org/wiki/Strongly_connected_component
+    #     return connected_components(graph,
+    #                                 connection='strong',
+    #                                 return_labels=False
+    #                                 ) == graph.shape[0]

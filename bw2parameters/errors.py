@@ -6,6 +6,11 @@ class ParameterError(ValidationError):
     pass
 
 
+class CapitalizationError(ParameterError):
+    """Parameter(s) names are case-sensitive"""
+    pass
+
+
 class DuplicateName(ValidationError):
     pass
 

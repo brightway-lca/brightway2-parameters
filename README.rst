@@ -1,14 +1,19 @@
 Brightway2 parameters
 =====================
 
-Library for storing, validating, and calculating with parameters. Designed to work with the `Brightway2 life cycle assessment framework <http://brightway2.readthedocs.org/en/latest/>`__, but should work for other use cases.
+Library for storing, validating, and calculating with parameters. Designed to work with the `Brightway2 life cycle assessment framework <http://brightway2.readthedocs.org/en/latest/>`__, but is generic enough to work in other use cases.
 
-Compatible with Python 2 & 3, tested on 2.7, 3.3, and 3.4. 100% test coverage. `Source code on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__, documentation on `Read the Docs <http://brightway2-parameters.readthedocs.org/>`__.
+.. code-block:: python
 
-Todo:
+    In [1]: from bw2parameters import ParameterSet
 
-    * Show where there are circular references
-    * MC needs an efficient way to insert values into various RNG output arrays
-        * Do we need a new unique ID per exchange? Exchange input/output not guaranteed unique
-        * Or somehow do something tricky during processing step?
-        * Rewrite main MonteCarlo class to have view into PV lca?
+    In [2]: parameters = {
+       ...:        'Deep_Thought': {'amount': 42},
+       ...:        'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+       ...:        'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+       ...: }
+
+    In [3]: ParameterSet(parameters).evaluate()
+    Out[3]: {'Deep_Thought': 42, 'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
+
+Compatible with Python 2.7, 3.3, and 3.4. 100% test coverage. `Source code on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__, documentation on `Read the Docs <http://brightway2-parameters.readthedocs.org/>`__.

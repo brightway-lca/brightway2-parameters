@@ -1,95 +1,65 @@
 Brightway2-parameters: Use and evaluate parameters in Brightway2
 ================================================================
 
-Use and data formats are most easily explained in an example:
+The simplest case is to evaluate a system of variables and formulas:
 
 .. code-block:: python
 
     In [1]: from bw2parameters import ParameterSet
 
-    In [2]: ds = {
-       ...:     'name': 'Some dataset',
-       ...:     'parameters': [
-       ...:         {
-       ...:             'name': 'Deep_Thought',
-       ...:             'amount': 42
-       ...:         },
-       ...:         {
-       ...:             'name': 'East_River_Creature',
-       ...:             'formula': '2 * Deep_Thought + 16'
-       ...:         },
-       ...:         {
-       ...:             'name': 'Elders_of_Krikkit',
-       ...:             'formula': 'sqrt(East_River_Creature)'
-       ...:         },
-       ...:     ],
-       ...:     'exchanges': [
-       ...:         {
-       ...:            'parameter': 'Elders_of_Krikkit'
-       ...:         },
-       ...:         {
-       ...:             'amount': 44
-       ...:         }
-       ...:     ]
+    In [2]: parameters = {
+       ...:        'Deep_Thought': {'amount': 42},
+       ...:        'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+       ...:        'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
        ...: }
 
-    In [3]: ps = ParameterSet(ds['parameters'])
+    In [3]: ParameterSet(parameters).evaluate()
+    Out[3]: {'Deep_Thought': 42, 'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
 
-    In [4]: ps.evaluate()
-    Out[4]: {'Deep_Thought': 42, 'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
+You can also use and reference global constants. This is useful when sharing some values across several sets of formulas:
 
-    In [5]: ps.evaluate_and_update_params()  # Updates the ``amount`` field in each parameter
+.. code-block:: python
 
-    In [6]: ds['parameters']
-    Out[6]:
-        [
-         {
-            'amount': 42,
-            'name': 'Deep_Thought'
-         },
-         {
-            'amount': 100,
-            'formula': '2 * Deep_Thought + 16',
-            'name': 'East_River_Creature'
-         },
-         {
-            'amount': 10.0,
-            'formula': 'sqrt(East_River_Creature)',
-            'name': 'Elders_of_Krikkit'
-         }
-        ]
+    In [4]: parameters = {
+       ...:        'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+       ...:        'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+       ...: }
 
-    In [7]: ignored_value = ps(ds)  # Calling a ParameterSet object with a dataset will update exchanges
+    In [5]: global_parameters = {'Deep_Thought': 42}
 
-    In [8]: ds  # ``ds`` is changed even if you don't capture the returned value from ``ps(ds)``
-    Out[8]:
-        {'exchanges': [
-            {
-                'amount': 10.0,  # ``amount`` field added, value from parameter name
-                'parameter': 'Elders_of_Krikkit'
-            },
-            {
-                'amount': 44  # No parameter reference, so not touched
-            }
-         ],
-         'name': 'Some dataset',
-         'parameters': [
-            {
-                'amount': 42,
-                'name': 'Deep_Thought'
-            },
-            {
-                'amount': 100,
-                'formula': '2 * Deep_Thought + 16',
-                'name': 'East_River_Creature'
-            },
-            {
-                'amount': 10.0,
-                'formula': 'sqrt(East_River_Creature)',
-                'name': 'Elders_of_Krikkit'
-            }
-         ]
-        }
+    In [6]: ParameterSet(parameters, global_parameters).evaluate()
+    Out[6]: {'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
+
+You can call a ``ParameterSet`` with a list of new variables and formulas. Note that this new list cannot have reference to itself, only to the parameter set defined earlier:
+
+.. code-block:: python
+
+    In [7]: another_parameter_list = [
+       ...:         {'formula': 'East_River_Creature + Elders_of_Krikkit'},
+       ...:     {'formula': '42 - Elders_of_Krikkit'},
+       ...:     {'something else': "won't change"}
+       ...: ]
+
+    In [8]: ps = ParameterSet(parameters, global_parameters)
+
+    In [9]: ps(another_parameter_list)
+    Out[9]:
+    [{u'amount': 110.0, 'formula': 'East_River_Creature + Elders_of_Krikkit'},
+     {u'amount': 32.0, 'formula': '42 - Elders_of_Krikkit'},
+     {'something else': "won't change"}]
+
+Finally, you can modify the parameters dictionary by adding an ``amount`` field to all formula parameters:
+
+.. code-block:: python
+
+    In [10]: ParameterSet(parameters, global_parameters).evaluate_and_set_amount_field()
+    Out[10]: {'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
+
+    In [11]: parameters
+    Out[11]:
+    {'East_River_Creature': {u'amount': 100, 'formula': '2 * Deep_Thought + 16'},
+     'Elders_of_Krikkit': {u'amount': 10.0,
+      'formula': 'sqrt(East_River_Creature)'}}
 
 Note the following:
 
@@ -97,8 +67,5 @@ Note the following:
 * Variable and formula names can't contradict the existing built-in functions. Available functions are documented in the `asteval documentation <http://newville.github.io/asteval/basics.html#built-in-functions>`__.
 * Formulas should not include the equals sign; instead of ``{'formula': 'a = b + c', 'name': 'a'}`` do ``{'formula': 'b + c', 'name': 'a'}``.
 * Formulas can only reference defined variables.
-* Parameter sets are specific to a dataset - there is no inheritance across datasets, or global parameters.
-* Monte Carlo is not yet implemented.
-* If you call a ``ParameterSet`` with a different dataset than the initialization parameters, i.e. ``ParameterSet(some_parameters)(my_new_dataset)``, the parameters will be inserted into that dataset.
 
-Brightway2-parameters is Python 2 & 3 compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__.
+Brightway2-parameters is Python 2.7 & 3.3/3.4 compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__.
