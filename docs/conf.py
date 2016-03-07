@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 #
-# Brightway2-parameters documentation build configuration file, created by
-# sphinx-quickstart on Mon Feb  2 21:49:02 2015.
-#
 # This file is execfile()d with the current directory set to its containing dir.
 #
 # Note that not all possible configuration values are present in this
@@ -40,8 +37,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Brightway2-parameters'
-copyright = u'2015, Chris Mutel'
+project =   'Brightway2-parameters'
+copyright = '2016, Chris Mutel'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
