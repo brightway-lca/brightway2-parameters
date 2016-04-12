@@ -9,7 +9,7 @@ setup(
     license=open('LICENSE.txt').read(),
     url="https://bitbucket.org/cmutel/brightway2-parameters",
     install_requires=[
-        "asteval",
+        "asteval>=0.9.7",
         "numpy",
         "scipy"
     ],
