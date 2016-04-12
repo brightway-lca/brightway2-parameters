@@ -37,18 +37,19 @@ class ParameterSet(object):
                     refs.pop(k)
                     break
             if not last_iteration.difference(set(refs.keys())):
-                found_lower_case = {obj.lower(): obj for obj in order}
-                wrong_case = [(obj, found_lower_case[obj.lower()])
-                              for references in refs.values()
-                              for obj in references
-                              if obj.lower() in found_lower_case]
+                seen_lower_case = {x.lower() for x in seen}
+                # Iterate over all remaining references,
+                # and see if references would match if lower cased
+                wrong_case = [
+                    (k, v)
+                    for k, v in refs.items()
+                    if not {x.lower() for x in v}.difference(seen_lower_case)
+                ]
                 if wrong_case:
-                    raise CapitalizationError(u"Possible errors in upper/lower " + \
-                        u"case letters for some parameters.\n" + \
-                        u"\n".join([
-                            u"'{}'' not found; could be '{}'".format(a, b)
-                            for a, b in wrong_case
-                        ])
+                    raise CapitalizationError((
+                        u"Possible errors in upper/lower case letters for some parameters.\n"
+                        u"Unmatched references:\n{}\nMatched references:\n{}"
+                        ).format(pformat(refs, indent=2), pformat(sorted(seen), indent=2))
                     )
                 raise ParameterError((u"Undefined or circular references for the following:"
                                       u"\n{}\nExisting references:\n{}").format(
