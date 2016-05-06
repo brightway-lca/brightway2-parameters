@@ -75,6 +75,7 @@ class UtilTestCase(unittest.TestCase):
         with self.assertRaises(TypeError):
             isidentifier(3)
 
+
 class EvaluationTestCase(unittest.TestCase):
     def test_simple_evaluation(self):
         params = {

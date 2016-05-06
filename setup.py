@@ -2,14 +2,14 @@ from setuptools import setup
 
 setup(
     name='bw2parameters',
-    version="0.4",
+    version="0.5.1",
     packages=["bw2parameters", "bw2parameters.tests"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
     license=open('LICENSE.txt').read(),
     url="https://bitbucket.org/cmutel/brightway2-parameters",
     install_requires=[
-        "asteval",
+        "asteval>=0.9.7",
         "numpy",
         "scipy"
     ],
