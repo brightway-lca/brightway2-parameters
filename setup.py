@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bw2parameters',
-    version="0.5.1",
+    version="0.5.2",
     packages=["bw2parameters", "bw2parameters.tests"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
@@ -11,7 +11,6 @@ setup(
     install_requires=[
         "asteval>=0.9.7",
         "numpy",
-        "scipy"
     ],
     long_description=open('README.rst').read(),
     classifiers=[

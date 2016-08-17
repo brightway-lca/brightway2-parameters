@@ -1,3 +1,2 @@
 asteval
 numpy
-scipy

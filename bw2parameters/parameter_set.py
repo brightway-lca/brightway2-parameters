@@ -4,8 +4,9 @@ from .utils import get_symbols, EXISTING_SYMBOLS, isstr, isidentifier
 from asteval import Interpreter
 from numbers import Number
 from pprint import pformat
-from scipy.sparse import lil_matrix
-from scipy.sparse.csgraph import connected_components
+# No longer required
+# from scipy.sparse import lil_matrix
+# from scipy.sparse.csgraph import connected_components
 
 
 class ParameterSet(object):
