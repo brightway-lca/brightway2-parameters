@@ -36,7 +36,7 @@ install:
     - cmd: conda update -y -q conda
     - cmd: conda config --add channels conda-forge
     - cmd: conda config --add channels cmutel
-    - cmd: conda install -y -q numpy asteval stats_arrays
+    - cmd: conda install -y -q numpy asteval stats_arrays astunparse
     - cmd: pip install --no-cache-dir eight pytest
 
 build: false
