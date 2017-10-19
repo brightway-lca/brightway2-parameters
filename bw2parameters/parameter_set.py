@@ -4,9 +4,13 @@ from .utils import get_symbols, EXISTING_SYMBOLS, isstr, isidentifier
 from asteval import Interpreter
 from numbers import Number
 from pprint import pformat
-# No longer required
-# from scipy.sparse import lil_matrix
-# from scipy.sparse.csgraph import connected_components
+from stats_arrays import uncertainty_choices
+
+MC_ERROR_TEXT = """Formula returned array of wrong shape:
+Name: {}
+Formula: {}
+Expected shape: {}
+Returned shape: {}"""
 
 
 class ParameterSet(object):
@@ -121,6 +125,46 @@ class ParameterSet(object):
             value[u'amount'] = result[key]
         return result
 
+    def evaluate_monte_carlo(self, iterations=1000):
+        """Evaluate each formula using Monte Carlo and variable uncertainty data, if present.
+
+        Formulas **must** return a one-dimensional array, or ``BroadcastingError`` is raised.
+
+        Returns dictionary of ``{parameter name: numpy array}``."""
+        interpreter = Interpreter()
+        result = {}
+
+        def get_rng_sample(obj):
+            if 'uncertainty_type' not in obj:
+                if 'uncertainty type' not in obj:
+                    obj = obj.copy()
+                    obj['uncertainty_type'] = 0
+                    obj['loc'] = obj['amount']
+                else:
+                    obj['uncertainty_type'] = obj['uncertainty type']
+            kls = uncertainty_choices[obj['uncertainty_type']]
+            return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
+
+        def fix_shape(array):
+            if array.shape in {(1, iterations), (iterations, 1)}:
+                return array.reshape((iterations,))
+            else:
+                return array
+
+        for key in self.order:
+            if key in self.global_params:
+                interpreter.symtable[key] = result[key] = get_rng_sample(self.global_params[key])
+            elif self.params[key].get('formula'):
+                sample = fix_shape(interpreter(self.params[key]['formula']))
+                if sample.shape != (iterations,):
+                    raise BroadcastingError(MC_ERROR_TEXT.format(
+                        key, self.params[key]['formula'], (iterations,), sample.shape)
+                    )
+                interpreter.symtable[key] = result[key] = sample
+            else:
+                interpreter.symtable[key] = result[key] = get_rng_sample(self.params[key])
+        return result
+
     def __call__(self, ds=None):
         """Evaluate each formula, and update ``exchanges`` if they reference a ``parameter`` name."""
         if ds is None:
@@ -140,50 +184,3 @@ class ParameterSet(object):
 
         # Changes in-place, but return anyway
         return ds
-
-    # This is now all done by basic_validation
-    # Code kept in case useful in future
-
-    # def validate(self):
-    #     """Check parameter set is valid. Raises a validation error if necessary."""
-    #     for key, value in self.references.items():
-    #         if key in value:
-    #             raise SelfReference(
-    #                 u"Formula for parameter {} references itself".format(key)
-    #             )
-    #     missing_refs = set().union(*self.references.values()).difference(
-    #         set(self.references.keys()))
-    #     if missing_refs:
-    #         raise ParameterError((u"Parameter(s) '{}' are referenced but "
-    #                               u"not defined").format(missing_refs))
-    #     if not self.test_no_circular_references():
-    #         # TODO: Show where there are circular references
-    #         raise ParameterError(
-    #             u"Parameters have a circular reference"
-    #         )
-
-    # def mapping(self):
-    #     """Map sorted parameter names to integer indices"""
-    #     return {n: i for i, n in enumerate(sorted(self.params.keys()))}
-
-    # def to_csgraph(self):
-    #     """Create sparse matrix graph representation of formula references"""
-    #     mapping = self.mapping()
-    #     matrix = lil_matrix((len(mapping), len(mapping)))
-    #     for name, row in mapping.items():
-    #         for reference in self.references[name]:
-    #             matrix[row, mapping[reference]] = 1
-    #     return matrix.tocsr()
-
-    # def test_no_circular_references(self):
-    #     """Check if the given parameter set has circular references.
-
-    #     Returns ``True`` if no circular references are present."""
-    #     graph = self.to_csgraph()
-    #     # ``connected_components`` returns number of strongly connected subgraphs
-    #     # if there are no cycles, then this will be the same as the number of
-    #     # parameters. See http://en.wikipedia.org/wiki/Strongly_connected_component
-    #     return connected_components(graph,
-    #                                 connection='strong',
-    #                                 return_labels=False
-    #                                 ) == graph.shape[0]

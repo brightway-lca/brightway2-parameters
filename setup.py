@@ -12,6 +12,7 @@ setup(
         "asteval",
         "astunparse",
         "numpy",
+        "stats_arrays",
     ],
     long_description=open('README.md').read(),
     classifiers=[
