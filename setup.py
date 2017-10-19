@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bw2parameters',
-    version="0.6.1.1",
+    version="0.6.1.2",
     packages=["bw2parameters"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
@@ -14,8 +14,7 @@ setup(
         "numpy",
         "stats_arrays",
     ],
-    setup_requires=['setuptools-markdown'],
-    long_description_markdown_filename='README.md',
+    long_description=open('README.rst').read(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
@@ -27,5 +26,7 @@ setup(
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
     ],
 )
