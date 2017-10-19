@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.6.1.1 (2017-10-19)
+
+- Packaging fix
+
 ## 0.6 (2017-10-19)
 
 - Add Monte Carlo sampling to parameter sets
