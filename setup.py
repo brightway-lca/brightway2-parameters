@@ -3,16 +3,17 @@ from setuptools import setup
 setup(
     name='bw2parameters',
     version="0.5.3",
-    packages=["bw2parameters", "bw2parameters.tests"],
+    packages=["bw2parameters"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
-    license=open('LICENSE.txt').read(),
+    license=open('LICENSE').read(),
     url="https://bitbucket.org/cmutel/brightway2-parameters",
     install_requires=[
-        "asteval>=0.9.7",
+        "asteval",
+        "astunparse",
         "numpy",
     ],
-    long_description=open('README.rst').read(),
+    long_description=open('README.md').read(),
     classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
