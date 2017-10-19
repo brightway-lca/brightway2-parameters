@@ -38,6 +38,8 @@ install:
     - cmd: conda config --add channels cmutel
     - cmd: conda install -y -q numpy asteval stats_arrays astunparse
     - cmd: pip install --no-cache-dir eight pytest
+    - cmd: cd
+    - cmd: pip install -e .
 
 build: false
 

@@ -10,5 +10,8 @@ pipelines:
     - step:
         script: # Modify the commands below to build your repository.
           - pip install pytest pytest-cov python-coveralls asteval astunparse
+          - pip install -e .
           - pytest --cov=bw2parameters
+          - pwd
+          - ls
           - coveralls
