@@ -1,13 +1,13 @@
 import ast
 from asteval.astutils import FROM_MATH, FROM_PY, FROM_NUMPY, NUMPY_RENAMES, NameFinder
 from astunparse import unparse
+from copy import deepcopy
 
 BUILTINS = FROM_MATH + FROM_NUMPY + FROM_PY + tuple(NUMPY_RENAMES.keys())
 
 
-class SubstituteName(NameFinder):
-    """find all symbol names used by a parsed node"""
-
+class PrefixNameAdder(NameFinder):
+    """Change name of all symbols by adding a prefix, unless name already in ``context``."""
     def __init__(self, prefix, context=None):
         self.prefix = prefix + "__"
         self.builtins = BUILTINS
@@ -19,6 +19,21 @@ class SubstituteName(NameFinder):
         if node.__class__.__name__ == 'Name':
             if node.ctx.__class__ == ast.Load and node.id not in self.builtins:
                 node.id = self.prefix + node.id
+        ast.NodeVisitor.generic_visit(self, node)
+
+
+class OnlySelected(NameFinder):
+    """Change name of all symbols already redefined in ``substitutes``."""
+    def __init__(self, substitutes=None):
+        self.substitutes = substitutes
+        ast.NodeVisitor.__init__(self)
+
+    def generic_visit(self, node):
+        if node.__class__.__name__ == 'Name' and node.ctx.__class__ == ast.Load:
+            try:
+                node.id = self.substitutes[node.id]
+            except KeyError:
+                pass
         ast.NodeVisitor.generic_visit(self, node)
 
 
@@ -38,5 +53,38 @@ def mangle_formula(string, prefix, context=None):
 
     """
     parsed = ast.parse(string)
-    SubstituteName(prefix, context).visit(parsed)
+    PrefixNameAdder(prefix, context).visit(parsed)
     return unparse(parsed).strip()
+
+
+def prefix_parameter_dict(dct, prefix):
+    """Add ``prefix`` to each key in ``dct``. Also updates the formulas, if present.
+
+    Adds ``original`` to each value in ``dct`` with the original key name.
+
+    Returns the new dictionary, and a dictionary of name substitutions like ``{old: new}``"""
+    def add_original(obj, name):
+        obj = deepcopy(obj)
+        obj['original'] = name
+        return obj
+
+    substitutions = {key: prefix + key for key in dct}
+    new_dct = {prefix + key: add_original(value, key) for key, value in dct.items()}
+    substitute_in_formulas(new_dct, substitutions)
+    return new_dct, substitutions
+
+
+def substitute_in_formulas(dct, substitutions):
+    """Substitute symbol names in ``dct`` formulas following ``substitutions``.
+
+    Modifies in place. Returns the modified ``dct``."""
+    NF = OnlySelected(substitutions)
+
+    for obj in dct.values():
+        if 'formula' in obj:
+            parsed = ast.parse(obj['formula'])
+            NF.visit(parsed)
+            obj['formula'] = unparse(parsed).strip()
+            print(obj['formula'])
+
+    return dct
