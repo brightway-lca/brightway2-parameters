@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.2 (2018-02-12)
+
+- Add `prefix_parameter_dict` and `substitute_in_formulas` for better symbol name mangling
+
 ### 0.6.1.2 (2017-10-19)
 
 - Packaging fix
