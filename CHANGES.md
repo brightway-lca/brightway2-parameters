@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.6.2.1 (2018-02-13)
+
+- Removed extraneous print statement
+
 ## 0.6.2 (2018-02-12)
 
 - Add `prefix_parameter_dict` and `substitute_in_formulas` for better symbol name mangling

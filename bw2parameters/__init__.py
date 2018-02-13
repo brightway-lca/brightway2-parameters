@@ -1,4 +1,4 @@
-__version__ = (0, 6, 2)
+__version__ = (0, 6, 2, 1)
 
 from .parameter_set import ParameterSet
 from .mangling import (

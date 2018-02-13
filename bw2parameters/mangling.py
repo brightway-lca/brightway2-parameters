@@ -85,6 +85,5 @@ def substitute_in_formulas(dct, substitutions):
             parsed = ast.parse(obj['formula'])
             NF.visit(parsed)
             obj['formula'] = unparse(parsed).strip()
-            print(obj['formula'])
 
     return dct
