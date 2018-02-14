@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.3
+
+- Allow `global_params` to be Numpy arrays
+
 ### 0.6.2.1 (2018-02-13)
 
 - Removed extraneous print statement

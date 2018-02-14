@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='bw2parameters',
-    version="0.6.2.1",
+    version="0.6.3",
     packages=["bw2parameters"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
