@@ -5,6 +5,7 @@ from asteval import Interpreter
 from numbers import Number
 from pprint import pformat
 from stats_arrays import uncertainty_choices
+import numpy as np
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
 Name: {}
@@ -94,7 +95,7 @@ class ParameterSet(object):
                     u"Parameter name {} is a built-in symbol".format(key)
                 )
         for key, value in self.global_params.items():
-            if not isinstance(value, Number):
+            if not isinstance(value, (Number, np.ndarray)):
                 raise ValueError((u"Global parameter {} does not have a "
                                   u"numeric value: {}").format(key, value))
             elif not isidentifier(key):
@@ -135,6 +136,9 @@ class ParameterSet(object):
         result = {}
 
         def get_rng_sample(obj):
+            if isinstance(obj, np.ndarray):
+                # Already a Monte Carlo sample
+                return obj
             if 'uncertainty_type' not in obj:
                 if 'uncertainty type' not in obj:
                     obj = obj.copy()

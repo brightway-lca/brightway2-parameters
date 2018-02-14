@@ -7,6 +7,7 @@ from bw2parameters.errors import (
     SelfReference,
 )
 from bw2parameters.utils import get_symbols, isidentifier
+import numpy as np
 import pytest
 import sys
 
@@ -167,7 +168,13 @@ def test_non_numeric():
         ps = ParameterSet({
             'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
             'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
-        }, {'Deep': 'Thought'})
+        }, {'Deep Thought': 'Thought'})
+
+def test_global_params_arrays_allowed():
+    ps = ParameterSet({
+        'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+        'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
+    }, {'Deep_Thought': np.arange(5)})
 
 def test_nonidentifier():
     with pytest.raises(ValueError):

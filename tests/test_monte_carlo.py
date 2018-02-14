@@ -54,6 +54,34 @@ def test_monte_carlo_evaluation():
     for v in result.values():
         assert v.shape == (1000,)
 
+def test_monte_carlo_evaluation_global_params():
+    params = {
+        'Deep_Thought': {
+            'amount': 5,
+            'uncertainty type': 4,  # Uniform
+            'minimum': 2,
+            'maximum': 8,
+        },
+        'Gargravarr': {
+            'amount': 10,
+            'uncertainty type': 4,  # Uniform
+            'minimum': 0,
+            'maximum': 20,
+        },
+        'East_River_Creature': {
+            'formula': 'Agrajag + Gargravarr'
+        },
+        'Elders_of_Krikkit': {
+            'formula': 'East_River_Creature + Deep_Thought'
+        },
+    }
+    global_params = {
+        'Agrajag': np.arange(10) + 100
+    }
+    result = ParameterSet(params, global_params=global_params).evaluate_monte_carlo(10)
+    assert all(result['East_River_Creature'] > 100)
+    assert all(result['Elders_of_Krikkit'] > result['East_River_Creature'])
+
 def test_wrong_shape():
     params = {
         'Agrajag': {'amount': 3.14},
