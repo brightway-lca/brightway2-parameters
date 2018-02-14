@@ -8,3 +8,5 @@ cover
 dist
 docs/_build
 MANIFEST
+.cache
+.pytest_cache
