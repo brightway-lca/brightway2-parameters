@@ -74,16 +74,25 @@ def prefix_parameter_dict(dct, prefix):
     return new_dct, substitutions
 
 
+class FormulaSubstitutor(object):
+    """Callable class that will substitute symbol names using ``substitutions`` substitution dictionary."""
+    def __init__(self, substitutions):
+        self.visitor = OnlySelected(substitutions)
+
+    def __call__(self, formula):
+        parsed = ast.parse(formula)
+        self.visitor.visit(parsed)
+        return unparse(parsed).strip()
+
+
 def substitute_in_formulas(dct, substitutions):
     """Substitute symbol names in ``dct`` formulas following ``substitutions``.
 
     Modifies in place. Returns the modified ``dct``."""
-    NF = OnlySelected(substitutions)
+    visitor = FormulaSubstitutor(substitutions)
 
     for obj in dct.values():
         if 'formula' in obj:
-            parsed = ast.parse(obj['formula'])
-            NF.visit(parsed)
-            obj['formula'] = unparse(parsed).strip()
+            obj['formula'] = visitor(obj['formula'])
 
     return dct

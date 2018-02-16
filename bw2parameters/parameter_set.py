@@ -177,14 +177,23 @@ class ParameterSet(object):
         self.evaluate_and_set_amount_field()
 
         # Evaluate formulas in exchanges
-        interpreter = Interpreter()
-        for key, value in self.global_params.items():
-            interpreter.symtable[key] = value
-        for key, value in self.params.items():
-            interpreter.symtable[key] = value['amount']
+        interpreter = self.get_interpreter()
         for obj in ds:
             if 'formula' in obj and 'amount' not in obj:
                 obj[u'amount'] = interpreter(obj['formula'])
 
         # Changes in-place, but return anyway
         return ds
+
+    def get_interpreter(self, evaluate_first=True):
+        """Get an instance of ``asteval.Interpreter`` that is prepopulated with global and local symbol names and values."""
+        if evaluate_first:
+            self.evaluate_and_set_amount_field()
+
+        interpreter = Interpreter()
+        for key, value in self.global_params.items():
+            interpreter.symtable[key] = value
+        for key, value in self.params.items():
+            interpreter.symtable[key] = value['amount']
+
+        return interpreter
