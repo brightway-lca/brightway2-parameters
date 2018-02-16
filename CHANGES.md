@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.6.3
+## 0.6.4 (2018-02-16)
+
+- Add some extra functionality for presamples
+
+## 0.6.3 (2018-02-14)
 
 - Allow `global_params` to be Numpy arrays
 
