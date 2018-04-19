@@ -1,5 +1,9 @@
 # Changelog
 
+### 0.6.5 (2018-4-19)
+
+Allow Numpy arrays in local amount values
+
 ## 0.6.4 (2018-02-16)
 
 - Add some extra functionality for presamples
