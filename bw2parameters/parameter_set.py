@@ -82,10 +82,10 @@ class ParameterSet(object):
         for key, value in self.params.items():
             if not isinstance(value, dict):
                 raise ValueError(u"Parameter value {} is not a dictionary".format(key))
-            elif not (isinstance(value.get('amount'), Number) or
+            elif not (isinstance(value.get('amount'), (Number, np.ndarray)) or
                     isstr(value.get('formula'))):
                 raise ValueError((u"Parameter {} must have either ``amount`` "
-                                  u"for ``formula`` field").format(key))
+                                  u"or ``formula`` field").format(key))
             elif not isidentifier(key):
                 raise ValueError(
                     u"Parameter label {} not a valid Python name".format(key)

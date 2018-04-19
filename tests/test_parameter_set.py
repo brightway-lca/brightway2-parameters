@@ -170,6 +170,12 @@ def test_non_numeric():
             'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
         }, {'Deep Thought': 'Thought'})
 
+def test_local_params_arrays_allowed():
+    ps = ParameterSet({
+        'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
+        'Elders_of_Krikkit': {'amount': np.arange(5)},
+    }, {'Deep_Thought': 5})
+
 def test_global_params_arrays_allowed():
     ps = ParameterSet({
         'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
