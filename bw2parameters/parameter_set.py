@@ -108,7 +108,7 @@ class ParameterSet(object):
         result = {}
         for key in self.order:
             if key in self.global_params:
-                interpreter.symtable[key] = self.global_params[key]
+                interpreter.symtable[key] = result[key] = self.global_params[key]
             elif self.params[key].get('formula'):
                 value = interpreter(self.params[key]['formula'])
                 interpreter.symtable[key] = result[key] = value

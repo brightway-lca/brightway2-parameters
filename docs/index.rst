@@ -28,7 +28,9 @@ You can also use and reference global constants. This is useful when sharing som
     In [5]: global_parameters = {'Deep_Thought': 42}
 
     In [6]: ParameterSet(parameters, global_parameters).evaluate()
-    Out[6]: {'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0}
+    Out[6]: {'East_River_Creature': 100, 'Elders_of_Krikkit': 10.0, 'Deep_Thought': 42}
+
+Note that calling ``evaluate`` will return the global parameter values as well as the local variables.
 
 You can call a ``ParameterSet`` with a list of new variables and formulas. Note that this new list cannot have reference to itself, only to the parameter set defined earlier. Calling set the ``amount`` field in the new list:
 

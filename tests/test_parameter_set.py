@@ -194,4 +194,8 @@ def test_evaluate():
         'East_River_Creature': {'formula': '2 * Deep_Thought + 16'},
         'Elders_of_Krikkit': {'formula': 'sqrt(East_River_Creature)'},
     }, {'Deep_Thought': 42})
-    assert ps.evaluate() == {'East_River_Creature': 100, 'Elders_of_Krikkit': 10}
+    assert ps.evaluate() == {
+        'East_River_Creature': 100,
+        'Elders_of_Krikkit': 10,
+        'Deep_Thought': 42,
+    }
