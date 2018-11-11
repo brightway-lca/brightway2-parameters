@@ -1,6 +1,10 @@
 # Changelog
 
-### 0.6.5 (2018-4-19)
+## 0.6.6 (2018-11-11)
+
+Return global parameters from `evaluate`, to be consistent with `evaluate_monte_carlo`
+
+## 0.6.5 (2018-4-19)
 
 Allow Numpy arrays in local amount values
 
