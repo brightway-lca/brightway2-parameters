@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7 (2021-12-25)
+
+* Improve handling of errors in `ParameterSet.evaluate_monte_carlo` so that an array is returned even when the interpreter fails.
+
 ## 0.6.6 (2018-11-11)
 
 Return global parameters from `evaluate`, to be consistent with `evaluate_monte_carlo`
