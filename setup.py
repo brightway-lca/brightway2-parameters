@@ -14,7 +14,8 @@ setup(
         "numpy",
         "stats_arrays",
     ],
-    long_description=open("README.rst").read(),
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
     classifiers=[
         "Development Status :: 5 - Production/Stable",
         "Intended Audience :: Developers",
