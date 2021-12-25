@@ -150,7 +150,13 @@ class ParameterSet(object):
             return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
 
         def fix_shape(array):
-            if array.shape in {(1, iterations), (iterations, 1)}:
+            if array is None:
+                return np.zeros((iterations,))
+            elif isinstance(array, Number):
+                return np.ones((iterations,)) * array
+            elif not isinstance(array, np.ndarray):
+                return np.zeros((iterations,))
+            elif array.shape in {(1, iterations), (iterations, 1)}:
                 return array.reshape((iterations,))
             else:
                 return array
