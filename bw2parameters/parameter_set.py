@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from .errors import *
-from .utils import get_symbols, EXISTING_SYMBOLS, isstr, isidentifier
-from asteval import Interpreter
 from numbers import Number
 from pprint import pformat
-from stats_arrays import uncertainty_choices
+
 import numpy as np
+from asteval import Interpreter
+from stats_arrays import uncertainty_choices
+
+from .errors import *
+from .utils import EXISTING_SYMBOLS, get_symbols, isidentifier, isstr
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
 Name: {}
@@ -52,24 +54,29 @@ class ParameterSet(object):
                     if not {x.lower() for x in v}.difference(seen_lower_case)
                 ]
                 if wrong_case:
-                    raise CapitalizationError((
-                        u"Possible errors in upper/lower case letters for some parameters.\n"
-                        u"Unmatched references:\n{}\nMatched references:\n{}"
-                        ).format(pformat(refs, indent=2), pformat(sorted(seen), indent=2))
+                    raise CapitalizationError(
+                        (
+                            u"Possible errors in upper/lower case letters for some parameters.\n"
+                            u"Unmatched references:\n{}\nMatched references:\n{}"
+                        ).format(
+                            pformat(refs, indent=2), pformat(sorted(seen), indent=2)
+                        )
                     )
-                raise ParameterError((u"Undefined or circular references for the following:"
-                                      u"\n{}\nExisting references:\n{}").format(
-                                      pformat(refs, indent=2),
-                                      pformat(sorted(order), indent=2)
-                ))
+                raise ParameterError(
+                    (
+                        u"Undefined or circular references for the following:"
+                        u"\n{}\nExisting references:\n{}"
+                    ).format(pformat(refs, indent=2), pformat(sorted(order), indent=2))
+                )
 
         return order
 
     def get_references(self):
         """Create dictionary of parameter references"""
-        refs = {key: get_symbols(value['formula'])
-                if value.get('formula') else set()
-                for key, value in self.params.items()}
+        refs = {
+            key: get_symbols(value["formula"]) if value.get("formula") else set()
+            for key, value in self.params.items()
+        }
         refs.update({key: set() for key in self.global_params})
         return refs
 
@@ -82,10 +89,16 @@ class ParameterSet(object):
         for key, value in self.params.items():
             if not isinstance(value, dict):
                 raise ValueError(u"Parameter value {} is not a dictionary".format(key))
-            elif not (isinstance(value.get('amount'), (Number, np.ndarray)) or
-                    isstr(value.get('formula'))):
-                raise ValueError((u"Parameter {} must have either ``amount`` "
-                                  u"or ``formula`` field").format(key))
+            elif not (
+                isinstance(value.get("amount"), (Number, np.ndarray))
+                or isstr(value.get("formula"))
+            ):
+                raise ValueError(
+                    (
+                        u"Parameter {} must have either ``amount`` "
+                        u"or ``formula`` field"
+                    ).format(key)
+                )
             elif not isidentifier(key):
                 raise ValueError(
                     u"Parameter label {} not a valid Python name".format(key)
@@ -96,11 +109,17 @@ class ParameterSet(object):
                 )
         for key, value in self.global_params.items():
             if not isinstance(value, (Number, np.ndarray)):
-                raise ValueError((u"Global parameter {} does not have a "
-                                  u"numeric value: {}").format(key, value))
+                raise ValueError(
+                    (
+                        u"Global parameter {} does not have a " u"numeric value: {}"
+                    ).format(key, value)
+                )
             elif not isidentifier(key):
-                raise ValueError((u"Global parameter label {} not a valid "
-                                  u"Python name").format(key))
+                raise ValueError(
+                    (u"Global parameter label {} not a valid " u"Python name").format(
+                        key
+                    )
+                )
 
     def evaluate(self):
         """Evaluate each formula. Returns dictionary of parameter names and values."""
@@ -109,21 +128,22 @@ class ParameterSet(object):
         for key in self.order:
             if key in self.global_params:
                 interpreter.symtable[key] = result[key] = self.global_params[key]
-            elif self.params[key].get('formula'):
-                value = interpreter(self.params[key]['formula'])
+            elif self.params[key].get("formula"):
+                value = interpreter(self.params[key]["formula"])
                 interpreter.symtable[key] = result[key] = value
-            elif 'amount' in self.params[key]:
-                interpreter.symtable[key] = result[key] = self.params[key]['amount']
+            elif "amount" in self.params[key]:
+                interpreter.symtable[key] = result[key] = self.params[key]["amount"]
             else:
-                raise ValueError(u"No suitable formula or static amount found "
-                                 u"in {}".format(key))
+                raise ValueError(
+                    u"No suitable formula or static amount found " u"in {}".format(key)
+                )
         return result
 
     def evaluate_and_set_amount_field(self):
         """Evaluate each formula. Updates the ``amount`` field of each parameter."""
         result = self.evaluate()
         for key, value in self.params.items():
-            value[u'amount'] = result[key]
+            value[u"amount"] = result[key]
         return result
 
     def evaluate_monte_carlo(self, iterations=1000):
@@ -139,14 +159,14 @@ class ParameterSet(object):
             if isinstance(obj, np.ndarray):
                 # Already a Monte Carlo sample
                 return obj
-            if 'uncertainty_type' not in obj:
-                if 'uncertainty type' not in obj:
+            if "uncertainty_type" not in obj:
+                if "uncertainty type" not in obj:
                     obj = obj.copy()
-                    obj['uncertainty_type'] = 0
-                    obj['loc'] = obj['amount']
+                    obj["uncertainty_type"] = 0
+                    obj["loc"] = obj["amount"]
                 else:
-                    obj['uncertainty_type'] = obj['uncertainty type']
-            kls = uncertainty_choices[obj['uncertainty_type']]
+                    obj["uncertainty_type"] = obj["uncertainty type"]
+            kls = uncertainty_choices[obj["uncertainty_type"]]
             return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
 
         def fix_shape(array):
@@ -163,16 +183,25 @@ class ParameterSet(object):
 
         for key in self.order:
             if key in self.global_params:
-                interpreter.symtable[key] = result[key] = get_rng_sample(self.global_params[key])
-            elif self.params[key].get('formula'):
-                sample = fix_shape(interpreter(self.params[key]['formula']))
+                interpreter.symtable[key] = result[key] = get_rng_sample(
+                    self.global_params[key]
+                )
+            elif self.params[key].get("formula"):
+                sample = fix_shape(interpreter(self.params[key]["formula"]))
                 if sample.shape != (iterations,):
-                    raise BroadcastingError(MC_ERROR_TEXT.format(
-                        key, self.params[key]['formula'], (iterations,), sample.shape)
+                    raise BroadcastingError(
+                        MC_ERROR_TEXT.format(
+                            key,
+                            self.params[key]["formula"],
+                            (iterations,),
+                            sample.shape,
+                        )
                     )
                 interpreter.symtable[key] = result[key] = sample
             else:
-                interpreter.symtable[key] = result[key] = get_rng_sample(self.params[key])
+                interpreter.symtable[key] = result[key] = get_rng_sample(
+                    self.params[key]
+                )
         return result
 
     def __call__(self, ds=None):
@@ -185,8 +214,8 @@ class ParameterSet(object):
         # Evaluate formulas in exchanges
         interpreter = self.get_interpreter()
         for obj in ds:
-            if 'formula' in obj and 'amount' not in obj:
-                obj[u'amount'] = interpreter(obj['formula'])
+            if "formula" in obj and "amount" not in obj:
+                obj[u"amount"] = interpreter(obj["formula"])
 
         # Changes in-place, but return anyway
         return ds
@@ -200,6 +229,6 @@ class ParameterSet(object):
         for key, value in self.global_params.items():
             interpreter.symtable[key] = value
         for key, value in self.params.items():
-            interpreter.symtable[key] = value['amount']
+            interpreter.symtable[key] = value["amount"]
 
         return interpreter
