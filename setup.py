@@ -7,7 +7,7 @@ setup(
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
     license=open("LICENSE").read(),
-    url="https://bitbucket.org/cmutel/brightway2-parameters",
+    url="https://github.com/brightway-lca/brightway2-parameters",
     install_requires=[
         "asteval",
         "astunparse",

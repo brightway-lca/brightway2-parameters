@@ -69,4 +69,4 @@ Note the following:
 * Formulas should not include the equals sign; instead of ``{'formula': 'a = b + c', 'name': 'a'}`` do ``{'formula': 'b + c', 'name': 'a'}``.
 * Formulas can only reference defined variables.
 
-Brightway2-parameters is Python 2.7 & 3.3/3.4 compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on bitbucket <https://bitbucket.org/cmutel/brightway2-parameters>`__.
+Brightway2-parameters is Python 2.7 & 3.3+ compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on Github <https://github.com/brightway-lca/brightway2-parameters>`__.
