@@ -17,9 +17,10 @@ Returned shape: {}"""
 
 
 class ParameterSet(object):
-    def __init__(self, params, global_params=None):
+    def __init__(self, params, global_params=None, interpreter=None):
         self.params = params
         self.global_params = global_params or {}
+        self.interpreter = interpreter or Interpreter()
         self.basic_validation()
         self.references = self.get_references()
         for name, references in self.references.items():
@@ -33,7 +34,7 @@ class ParameterSet(object):
     def get_order(self):
         """Get a list of parameter name in an order that they can be safely evaluated"""
         order = []
-        seen = set()
+        seen = set(self.interpreter.symtable.keys())
         refs = self.references.copy()
 
         while refs:
@@ -74,7 +75,7 @@ class ParameterSet(object):
     def get_references(self):
         """Create dictionary of parameter references"""
         refs = {
-            key: get_symbols(value["formula"]) if value.get("formula") else set()
+            key: get_symbols(value["formula"], interpreter=self.interpreter) if value.get("formula") else set()
             for key, value in self.params.items()
         }
         refs.update({key: set() for key in self.global_params})
@@ -123,7 +124,7 @@ class ParameterSet(object):
 
     def evaluate(self):
         """Evaluate each formula. Returns dictionary of parameter names and values."""
-        interpreter = Interpreter()
+        interpreter = self.interpreter
         result = {}
         for key in self.order:
             if key in self.global_params:
@@ -152,7 +153,7 @@ class ParameterSet(object):
         Formulas **must** return a one-dimensional array, or ``BroadcastingError`` is raised.
 
         Returns dictionary of ``{parameter name: numpy array}``."""
-        interpreter = Interpreter()
+        interpreter = self.interpreter
         result = {}
 
         def get_rng_sample(obj):
@@ -226,7 +227,7 @@ class ParameterSet(object):
         if evaluate_first:
             self.evaluate_and_set_amount_field()
 
-        interpreter = Interpreter()
+        interpreter = self.interpreter
         for key, value in self.global_params.items():
             interpreter.symtable[key] = value
         for key, value in self.params.items():
