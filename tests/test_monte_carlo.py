@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
-from bw2parameters import ParameterSet
-from bw2parameters.errors import BroadcastingError
 from copy import deepcopy
+
 import numpy as np
 import pytest
+
+from bw2parameters import ParameterSet
+from bw2parameters.errors import BroadcastingError
 
 
 def test_monte_carlo_evaluation():
@@ -54,6 +56,7 @@ def test_monte_carlo_evaluation():
     for v in result.values():
         assert v.shape == (1000,)
 
+
 def test_monte_carlo_evaluation_global_params():
     params = {
         'Deep_Thought': {
@@ -81,6 +84,7 @@ def test_monte_carlo_evaluation_global_params():
     result = ParameterSet(params, global_params=global_params).evaluate_monte_carlo(10)
     assert all(result['East_River_Creature'] > 100)
     assert all(result['Elders_of_Krikkit'] > result['East_River_Creature'])
+
 
 def test_wrong_shape():
     params = {
