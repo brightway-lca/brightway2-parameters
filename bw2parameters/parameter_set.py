@@ -163,9 +163,9 @@ class ParameterSet(object):
                 if "uncertainty type" not in obj:
                     obj = obj.copy()
                     obj["uncertainty_type"] = 0
-                    obj["loc"] = obj["amount"]
                 else:
                     obj["uncertainty_type"] = obj["uncertainty type"]
+                obj["loc"] = obj.get("loc") or obj["amount"]
             kls = uncertainty_choices[obj["uncertainty_type"]]
             return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
 
