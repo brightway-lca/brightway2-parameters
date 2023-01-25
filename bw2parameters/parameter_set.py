@@ -4,8 +4,8 @@ from pprint import pformat
 
 import numpy as np
 from asteval import Interpreter
-from stats_arrays import uncertainty_choices
 
+from stats_arrays import uncertainty_choices
 from .errors import *
 from .utils import EXISTING_SYMBOLS, get_symbols, isidentifier, isstr
 
@@ -90,8 +90,8 @@ class ParameterSet(object):
             if not isinstance(value, dict):
                 raise ValueError(u"Parameter value {} is not a dictionary".format(key))
             elif not (
-                isinstance(value.get("amount"), (Number, np.ndarray))
-                or isstr(value.get("formula"))
+                    isinstance(value.get("amount"), (Number, np.ndarray))
+                    or isstr(value.get("formula"))
             ):
                 raise ValueError(
                     (
@@ -116,7 +116,7 @@ class ParameterSet(object):
                 )
             elif not isidentifier(key):
                 raise ValueError(
-                    (u"Global parameter label {} not a valid " u"Python name").format(
+                    u"Global parameter label {} not a valid " u"Python name".format(
                         key
                     )
                 )
@@ -221,7 +221,8 @@ class ParameterSet(object):
         return ds
 
     def get_interpreter(self, evaluate_first=True):
-        """Get an instance of ``asteval.Interpreter`` that is prepopulated with global and local symbol names and values."""
+        """Get an instance of ``asteval.Interpreter`` that is prepopulated with global and local \
+        symbol names and values."""
         if evaluate_first:
             self.evaluate_and_set_amount_field()
 
