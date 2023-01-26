@@ -6,4 +6,4 @@ from .mangling import (
     prefix_parameter_dict,
     substitute_in_formulas,
 )
-from .parameter_set import ParameterSet
+from .parameter_set import ParameterSet, PintParameterSet
