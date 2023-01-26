@@ -1,5 +1,9 @@
 # parameters Changelog
 
+## 0.8.0 (2023-01-26)
+
+- Introduce new class PintParameterSet for solving formulas with units
+
 ## 0.7.1 (2023-01-25)
 
 - Fix tests: must set loc in all monte carlo runs
