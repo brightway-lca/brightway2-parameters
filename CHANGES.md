@@ -1,8 +1,14 @@
 # parameters Changelog
 
+## 0.7.1 (2023-01-25)
+
+- Fix tests: must set loc in all monte carlo runs
+- minor (black) reformatting and isorting
+- introduce github workflow for automated testing
+
 ## 0.7 (2021-12-25)
 
-* Improve handling of errors in `ParameterSet.evaluate_monte_carlo` so that an array is returned even when the interpreter fails.
+- Improve handling of errors in `ParameterSet.evaluate_monte_carlo` so that an array is returned even when the interpreter fails.
 
 ## 0.6.6 (2018-11-11)
 
