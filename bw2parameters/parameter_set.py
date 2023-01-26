@@ -246,6 +246,13 @@ class PintParameterSet(ParameterSet):
         from pint.util import string_preprocessor
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
+        # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
+        import pint.util
+        import re
+        pint.util._subs_re_list[-1] = (r"([\w\.\)])\s+(?=[\w\(])", r"\1*")
+        pint.util._subs_re = [
+            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in pint.util._subs_re_list
+        ]
 
     @staticmethod
     def _preprocess_params(params):
