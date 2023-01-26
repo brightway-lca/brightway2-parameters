@@ -237,24 +237,29 @@ class ParameterSet(object):
 
 
 class PintParameterSet(ParameterSet):
+    string_preprocessor = None
+    ureg = None
 
-    def _setup_pint(self):
+    @classmethod
+    def _setup_pint(cls):
         from pint import UnitRegistry
         from pint.util import string_preprocessor
-        self.string_preprocessor = string_preprocessor
-        self.ureg = UnitRegistry()
+        cls.string_preprocessor = string_preprocessor
+        cls.ureg = UnitRegistry()
 
-    def _preprocess_params(self, params):
+    @staticmethod
+    def _preprocess_params(params):
         """Convert 1 m -> 1 * m etc."""
         # pre-process all formulas
         if isinstance(params, dict):
             for k, v in params.items():
                 if isinstance(v, dict) and v.get("formula"):
                     v["_formula"] = v.get("formula")
-                    v["formula"] = self.string_preprocessor(v["_formula"])
+                    v["formula"] = PintParameterSet.string_preprocessor(v["_formula"])
 
     def __init__(self, params, global_params=None, interpreter=None):
-        self._setup_pint()
+        if self.string_preprocessor is None:
+            self._setup_pint()
         self._preprocess_params(params)
         self._preprocess_params(global_params)
         super().__init__(params=params, global_params=global_params, interpreter=interpreter)
