@@ -1,18 +1,22 @@
 # -*- coding: utf-8 -*-
 import sys
-import warnings
 
 import numpy as np
 import pytest
 
 from bw2parameters import PintParameterSet as ParameterSet
 from bw2parameters.errors import (
-    CapitalizationError,
     DuplicateName,
     ParameterError,
     SelfReference,
 )
 from bw2parameters.utils import get_symbols, isidentifier
+
+pint = pytest.importorskip("pint")
+
+if pint:
+    ureg = pint.UnitRegistry()
+    UndefinedUnitError = pint.UndefinedUnitError
 
 
 def test_call_updates_exchanges():
@@ -158,7 +162,7 @@ def test_self_reference():
 
 
 def test_missing_reference():
-    with pytest.raises(ParameterError):
+    with pytest.raises(UndefinedUnitError):
         ParameterSet({'Elders_of_Krikkit': {'formula': '2 * Ford_Prefect'}})
 
 
@@ -172,7 +176,7 @@ def test_circular_reference():
 
 
 def test_capitaliation_error():
-    with pytest.raises(CapitalizationError):
+    with pytest.raises(UndefinedUnitError):
         ParameterSet({
             'Elders_of_Krikkit': {'formula': '2 * Agrajag'},
             'agrajag': {'amount': 2},
@@ -222,24 +226,18 @@ def test_evaluate():
 
 
 def test_pint_parameters():
-    try:
-        from pint import UnitRegistry
-
-        ureg = UnitRegistry()
-        ps = ParameterSet({
-            'A': {'formula': '1 m'},
-            'B': {'formula': 'A + 200 mm'},
-            'C': {'formula': 'B * kg/m'},
-            'D': {'formula': 'A * B * C'},
-        })
-        assert ps.evaluate() == {
-            'A': ureg('1 m'),
-            'B': ureg("1.2 m"),
-            'C': ureg("1.2 kg"),
-            'D': ureg("1.44 kg * m^2"),
-        }
-    except ImportError:
-        warnings.warn("Could not import pint. Skipping test.")
+    ps = ParameterSet({
+        'A': {'formula': '1 m'},
+        'B': {'formula': 'A + 200 mm'},
+        'C': {'formula': 'B * kg/m'},
+        'D': {'formula': 'A * B * C'},
+    })
+    assert ps.evaluate() == {
+        'A': ureg('1 m'),
+        'B': ureg("1.2 m"),
+        'C': ureg("1.2 kg"),
+        'D': ureg("1.44 kg * m^2"),
+    }
 
 
 if __name__ == "__main__":
