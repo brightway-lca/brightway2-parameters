@@ -14,6 +14,9 @@ setup(
         "numpy",
         "stats_arrays",
     ],
+    extras_require={
+        "pint": ["pint"],
+    },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     classifiers=[
