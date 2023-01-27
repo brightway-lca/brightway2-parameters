@@ -6,7 +6,7 @@ setup(
     packages=["bw2parameters"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
-    license=open("LICENSE").read(),
+    license=open("LICENSE").read()[:200],
     url="https://github.com/brightway-lca/brightway2-parameters",
     install_requires=[
         "asteval",
