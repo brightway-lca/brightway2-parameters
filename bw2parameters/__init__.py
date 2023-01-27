@@ -1,5 +1,6 @@
 __version__ = (0, 7)
 
+from .interpreter import Interpreter, PintInterpreter  # noqa
 from .mangling import (
     FormulaSubstitutor,
     mangle_formula,
