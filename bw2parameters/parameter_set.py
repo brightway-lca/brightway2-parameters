@@ -3,10 +3,10 @@ from numbers import Number
 from pprint import pformat
 
 import numpy as np
-from asteval import Interpreter
 
 from stats_arrays import uncertainty_choices
 from .errors import *
+from .interpreter import Interpreter, PintInterpreter
 from .utils import EXISTING_SYMBOLS, get_symbols, isidentifier, isstr
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
@@ -237,49 +237,25 @@ class ParameterSet(object):
 
 
 class PintParameterSet(ParameterSet):
-    string_preprocessor = None
-    ureg = None
-
-    @classmethod
-    def _setup_pint(cls):
-        from pint import UnitRegistry
-        from pint.util import string_preprocessor
-        cls.string_preprocessor = string_preprocessor
-        cls.ureg = UnitRegistry()
-        # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-        import pint.util
-        import re
-        pint.util._subs_re_list[-1] = (r"([\w\.\)])\s+(?=[\w\(])", r"\1*")
-        pint.util._subs_re = [
-            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in pint.util._subs_re_list
-        ]
-
-    @staticmethod
-    def _preprocess_params(params):
-        """Convert 1 m -> 1 * m etc."""
-        # pre-process all formulas
-        if isinstance(params, dict):
-            for k, v in params.items():
-                if isinstance(v, dict) and v.get("formula"):
-                    v["_formula"] = v.get("formula")
-                    v["formula"] = PintParameterSet.string_preprocessor(v["_formula"])
 
     def __init__(self, params, global_params=None, interpreter=None):
-        if self.string_preprocessor is None:
-            self._setup_pint()
-        self._preprocess_params(params)
-        self._preprocess_params(global_params)
+        if interpreter is None:
+            interpreter = PintInterpreter()
         super().__init__(params=params, global_params=global_params, interpreter=interpreter)
 
-    def _add_units_to_symtable(self):
-        """Add unit references to interpreter symtable"""
-        params = set(self.references.keys())
+    def _parse_units(self):
+        """Try interpreting references, which are not parameter names as units."""
+        param_names = set(self.references.keys())
         all_refs = set(p for refs in self.references.values() for p in refs)
-        units = all_refs.difference(params)
-        for u in units:
-            self.interpreter.symtable[u] = self.ureg(u)
+        candidates = all_refs.difference(param_names)
+        for u in candidates:
+            try:
+                self.interpreter.symtable[u] = self.interpreter.ureg(u)
+            except self.interpreter.UndefinedUnitError:
+                # leave error handling to `self.get_order` for consistent behavior with `ParameterSet`
+                pass
 
     def get_order(self):
         """Get a list of parameter name in an order that they can be safely evaluated"""
-        self._add_units_to_symtable()
+        self._parse_units()
         return super().get_order()
