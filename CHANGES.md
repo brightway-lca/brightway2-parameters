@@ -1,7 +1,8 @@
 # parameters Changelog
 
-## 0.8.0 (2023-01-26)
+## 1.0.0 (2023-01-27)
 
+- BREAKING CHANGE: Dropping Python 2.7 support
 - Introduce new class PintParameterSet for solving formulas with units
 
 ## 0.7.1 (2023-01-25)
