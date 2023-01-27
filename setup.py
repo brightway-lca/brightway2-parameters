@@ -8,6 +8,7 @@ setup(
     author_email="cmutel@gmail.com",
     license=open("LICENSE").read()[:200],
     url="https://github.com/brightway-lca/brightway2-parameters",
+    python_requires='>=3.3',
     install_requires=[
         "asteval",
         "astunparse",
