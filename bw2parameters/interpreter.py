@@ -33,10 +33,10 @@ class Interpreter(ASTInterpreter):
         """Adds symbols to symtable."""
         self.symtable.update(symbols)
 
-    def eval(self, expr, *args, known_symbols=None, **kwargs):
+    def eval(self, expr, *args, known_symbols=None, raise_errors=True, **kwargs):
         if known_symbols is not None:
             self.symtable.update(known_symbols)
-        return super().eval(expr=expr, *args, **kwargs)
+        return super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
 
 
 class PintInterpreter(Interpreter):

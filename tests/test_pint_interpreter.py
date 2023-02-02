@@ -59,3 +59,6 @@ def test_eval():
     assert result == ureg("201 kg")
     # test g in symtable
     assert i.symtable["g"] == ureg("1 kg")
+    # test unknown symbol
+    with pytest.raises(NameError):
+        i("1 kg + 200 g + foo")
