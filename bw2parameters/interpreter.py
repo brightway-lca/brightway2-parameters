@@ -65,10 +65,22 @@ class PintInterpreter(Interpreter):
             (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in pint.util._subs_re_list
         ]
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, units=None, **kwargs):
         if self.string_preprocessor is None:
             self._setup_pint()
         super().__init__(*args, **kwargs)
+        if units is not None:
+            self.add_symbols({u: self.ureg(u) for u in units})
 
     def parse(self, text):
         return super().parse(PintInterpreter.string_preprocessor(text))
+
+    def add_symbols(self, symbols):
+        """
+        Adds symbols to symtable while making sure that pint Quantities are from same registry as self.ureg
+        (otherwise self.eval will fail).
+        """
+        for k, v in symbols.items():
+            if isinstance(v, self.Quantity) and v._REGISTRY != self.ureg:
+                symbols[k] = self.ureg(str(v))
+        self.symtable.update(symbols)
