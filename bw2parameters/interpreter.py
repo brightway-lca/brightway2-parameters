@@ -1,4 +1,42 @@
-from asteval import Interpreter as Interpreter
+from collections.abc import Iterable
+
+from asteval import Interpreter as ASTInterpreter
+from asteval import NameFinder
+
+
+class Interpreter(ASTInterpreter):
+
+    def get_symbols(self, text):
+        """
+        Parses an expression and returns all symbols.
+        """
+        nf = NameFinder()
+        nf.generic_visit(self.parse(text))
+        return nf.names
+
+    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False):
+        """
+        Parses an expression and returns all symbols which are neither in the symtable nor passed via known_symbols.
+        """
+        if known_symbols is None:
+            known_symbols = set()
+        elif isinstance(known_symbols, Iterable):
+            known_symbols = set(known_symbols)
+        else:
+            raise ValueError(f"Parameter known_symbols must be iterable. Is {type(known_symbols)}.")
+        if not ignore_symtable:
+            known_symbols = known_symbols.union(set(self.symtable.keys()))
+        all_symbols = set(self.get_symbols(text))
+        return all_symbols.difference(known_symbols)
+
+    def add_symbols(self, symbols):
+        """Adds symbols to symtable."""
+        self.symtable.update(symbols)
+
+    def eval(self, expr, *args, known_symbols=None, **kwargs):
+        if known_symbols is not None:
+            self.symtable.update(known_symbols)
+        return super().eval(expr=expr, *args, **kwargs)
 
 
 class PintInterpreter(Interpreter):
