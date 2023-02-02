@@ -46,8 +46,11 @@ class PintInterpreter(Interpreter):
 
     @classmethod
     def _setup_pint(cls):
-        from pint import UnitRegistry, UndefinedUnitError
-        from pint.util import string_preprocessor
+        try:
+            from pint import UnitRegistry, UndefinedUnitError, Quantity
+            from pint.util import string_preprocessor
+        except ImportError:
+            raise ImportError("Module pint could not be loaded. Please install pint: `pip install pint`.")
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.UndefinedUnitError = UndefinedUnitError
