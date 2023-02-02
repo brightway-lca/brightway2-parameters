@@ -41,6 +41,7 @@ class Interpreter(ASTInterpreter):
 
 class PintInterpreter(Interpreter):
     string_preprocessor = None
+    Quantity = None
     ureg = None
     UndefinedUnitError = None
 
@@ -52,6 +53,7 @@ class PintInterpreter(Interpreter):
         except ImportError:
             raise ImportError("Module pint could not be loaded. Please install pint: `pip install pint`.")
         cls.string_preprocessor = string_preprocessor
+        cls.Quantity = Quantity
         cls.ureg = UnitRegistry()
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
