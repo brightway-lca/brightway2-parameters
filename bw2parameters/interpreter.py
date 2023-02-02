@@ -75,6 +75,25 @@ class PintInterpreter(Interpreter):
     def parse(self, text):
         return super().parse(PintInterpreter.string_preprocessor(text))
 
+    def get_pint_symbols(self, text, known_symbols=None, ignore_symtable=True, as_dict=True):
+        """
+        Parses an expression and returns all symbols which can be interpreted as pint units.
+        """
+        # get all unknown symbols
+        unknown_symbols = self.get_unknown_symbols(text=text, known_symbols=known_symbols,
+                                                   ignore_symtable=ignore_symtable)
+        # check which of them can be interpreted by pint
+        pint_symbols = {}
+        for s in unknown_symbols:
+            try:
+                pint_symbols[s] = self.ureg(s)
+            except self.UndefinedUnitError:
+                pass
+        # return dict or set
+        if not as_dict:
+            pint_symbols = set(pint_symbols)
+        return pint_symbols
+
     def add_symbols(self, symbols):
         """
         Adds symbols to symtable while making sure that pint Quantities are from same registry as self.ureg
@@ -84,3 +103,10 @@ class PintInterpreter(Interpreter):
             if isinstance(v, self.Quantity) and v._REGISTRY != self.ureg:
                 symbols[k] = self.ureg(str(v))
         self.symtable.update(symbols)
+
+    def eval(self, expr, *args, known_symbols=None, **kwargs):
+        if known_symbols is not None:
+            self.add_symbols(known_symbols)
+        pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False, as_dict=True)
+        self.add_symbols(pint_symbols)
+        return super().eval(expr=expr, *args, **kwargs)
