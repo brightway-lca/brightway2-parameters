@@ -55,6 +55,7 @@ class PintInterpreter(Interpreter):
         cls.string_preprocessor = string_preprocessor
         cls.Quantity = Quantity
         cls.ureg = UnitRegistry()
+        cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
         import pint.util
