@@ -22,17 +22,17 @@ class TestInterpreter:
         assert {'a', 'b', 'c', 'sqrt', 'log'} == i.get_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
         assert set() == i.get_symbols(None)
 
-    def test_get_unknown_symbols(self):
+    def test_get_unknown_symbols(self, **kwargs):
         i = self.Interpreter()
-        assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * b + c')
-        assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
+        assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * b + c', **kwargs)
+        assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)', **kwargs)
         assert {'a', 'b', 'c', 'sqrt', 'log'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)',
-                                                                       ignore_symtable=True)
-        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c'})
-        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c': 1})
-        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=['c'])
-        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=('c',))
-        assert set() == i.get_unknown_symbols(None)
+                                                                       ignore_symtable=True, **kwargs)
+        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c'}, **kwargs)
+        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c': 1}, **kwargs)
+        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=['c'], **kwargs)
+        assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=('c',), **kwargs)
+        assert set() == i.get_unknown_symbols(None, **kwargs)
 
     def test_eval(self):
         i = self.Interpreter()

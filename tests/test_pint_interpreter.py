@@ -23,6 +23,22 @@ class TestPintInterpreter(InterpreterTests):
         i = self.Interpreter()
         i.parse("1 kg")  # test no error raised
 
+    def test_get_unknown_symbols(self, **kwargs):
+        # PintInterpreter.get_unknown_units() behaves like Interpreter.get_unknown_units() if
+        # `include_pint_units = True`
+        super().test_get_unknown_symbols(include_pint_units=True)
+        # default: include_pint_units = False
+        i = self.Interpreter()
+        assert set() == i.get_unknown_symbols('a * b + c', **kwargs)  # a: year, b: barn, c: light year
+        assert set() == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)', **kwargs)
+        assert {'sqrt', 'log'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)', ignore_symtable=True,
+                                                        **kwargs)
+        assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols={'n'}, **kwargs)
+        assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols={'n': 1}, **kwargs)
+        assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=['n'], **kwargs)
+        assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=('n',), **kwargs)
+        assert set() == i.get_unknown_symbols(None, **kwargs)
+
     def test_get_pint_symbols(self):
         i = self.Interpreter()
         text = "1 kg + 2 g"

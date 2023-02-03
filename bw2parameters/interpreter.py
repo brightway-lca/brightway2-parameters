@@ -98,6 +98,24 @@ class PintInterpreter(Interpreter):
     def parse(self, text):
         return super().parse(PintInterpreter.string_preprocessor(text))
 
+    def is_pint_unit_symbol(self, symbol):
+        """Returns True if the given symbol can be interpreted as a pint unit, False otherwise"""
+        try:
+            self.ureg(symbol)
+            return True
+        except self.UndefinedUnitError:
+            return False
+
+    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False, include_pint_units=False):
+        """Parses the given expression and returns a list of symbols, which are neither contained in the symtable,
+        nor in known_symbols, nor can be interpreted as pint units"""
+        unknown_symbols = super().get_unknown_symbols(text=text, known_symbols=known_symbols,
+                                                      ignore_symtable=ignore_symtable)
+        if not include_pint_units:
+            unknown_symbols = {s for s in unknown_symbols if not self.is_pint_unit_symbol(s)}
+
+        return unknown_symbols
+
     def get_pint_symbols(self, text, known_symbols=None, ignore_symtable=True, as_dict=True):
         """
         Parses an expression and returns all symbols which can be interpreted as pint units.
@@ -107,9 +125,9 @@ class PintInterpreter(Interpreter):
                 return dict()
             else:
                 return set()
-        # get all unknown symbols
-        unknown_symbols = self.get_unknown_symbols(text=text, known_symbols=known_symbols,
-                                                   ignore_symtable=ignore_symtable)
+        # get all unknown symbols (incl. unit symbols)
+        unknown_symbols = super().get_unknown_symbols(text=text, known_symbols=known_symbols,
+                                                      ignore_symtable=ignore_symtable)
         # check which of them can be interpreted by pint
         pint_symbols = {}
         for s in unknown_symbols:
@@ -132,7 +150,7 @@ class PintInterpreter(Interpreter):
         for k, v in symbols.items():
             if isinstance(v, self.Quantity) and v._REGISTRY != self.ureg:
                 symbols[k] = self.ureg(str(v))
-        self.symtable.update(symbols)
+        super().add_symbols(symbols=symbols)
 
     def eval(self, expr, *args, known_symbols=None, **kwargs):
         self.add_symbols(known_symbols)
