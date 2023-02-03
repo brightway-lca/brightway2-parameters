@@ -38,13 +38,15 @@ class Interpreter(ASTInterpreter):
         return all_symbols.difference(known_symbols)
 
     def add_symbols(self, symbols):
-        """Adds symbols to symtable."""
+        """Adds symbols to the symtable."""
+        if symbols is None:
+            return
         self.symtable.update(symbols)
 
     def eval(self, expr, *args, known_symbols=None, raise_errors=True, **kwargs):
-        if known_symbols is not None:
-            self.symtable.update(known_symbols)
-        return super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
+        self.add_symbols(known_symbols)
+        result = super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
+        return result
 
 
 class PintInterpreter(Interpreter):
@@ -112,14 +114,16 @@ class PintInterpreter(Interpreter):
         Adds symbols to symtable while making sure that pint Quantities are from same registry as self.ureg
         (otherwise self.eval will fail).
         """
+        if symbols is None:
+            return
         for k, v in symbols.items():
             if isinstance(v, self.Quantity) and v._REGISTRY != self.ureg:
                 symbols[k] = self.ureg(str(v))
         self.symtable.update(symbols)
 
     def eval(self, expr, *args, known_symbols=None, **kwargs):
-        if known_symbols is not None:
-            self.add_symbols(known_symbols)
+        self.add_symbols(known_symbols)
         pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False, as_dict=True)
         self.add_symbols(pint_symbols)
-        return super().eval(expr=expr, *args, **kwargs)
+        result = super().eval(expr=expr, *args, **kwargs)
+        return result
