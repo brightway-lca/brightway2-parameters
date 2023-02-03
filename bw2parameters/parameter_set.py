@@ -243,23 +243,6 @@ class PintParameterSet(ParameterSet):
             interpreter = PintInterpreter()
         super().__init__(params=params, global_params=global_params, interpreter=interpreter)
 
-    def _parse_units(self):
-        """Try interpreting references, which are not parameter names as units."""
-        param_names = set(self.references.keys())
-        all_refs = set(p for refs in self.references.values() for p in refs)
-        candidates = all_refs.difference(param_names)
-        for u in candidates:
-            try:
-                self.interpreter.symtable[u] = self.interpreter.ureg(u)
-            except self.interpreter.UndefinedUnitError:
-                # leave error handling to `self.get_order` for consistent behavior with `ParameterSet`
-                pass
-
-    def get_order(self):
-        """Get a list of parameter names in an order that can be safely evaluated"""
-        self._parse_units()
-        return super().get_order()
-
     def evaluate_and_set_amount_field(self):
         """
         Evaluate each formula. Updates the ``amount`` field of each parameter. Also updates the ``unit`` field
