@@ -69,6 +69,7 @@ class Interpreter(ASTInterpreter):
 class PintInterpreter(Interpreter):
     string_preprocessor = None
     Quantity = None
+    GeneralQuantity = None
     ureg = None
     UndefinedUnitError = None
 
@@ -82,6 +83,7 @@ class PintInterpreter(Interpreter):
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.Quantity = cls.ureg.Quantity
+        cls.GeneralQuantity = UnitRegistry.Quantity
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
@@ -152,7 +154,8 @@ class PintInterpreter(Interpreter):
         if symbols is None:
             return
         for k, v in symbols.items():
-            if hasattr(v, "_REGISTRY") and v._REGISTRY != self.ureg:
+            # if value is a quantity from another unit registry -> convert to current unit registry
+            if isinstance(v, self.GeneralQuantity) and not isinstance(v, self.Quantity):
                 symbols[k] = self.ureg(str(v))
         super().add_symbols(symbols=symbols)
 

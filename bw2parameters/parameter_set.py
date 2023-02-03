@@ -131,16 +131,17 @@ class ParameterSet(object):
         result = {}
         for key in self.order:
             if key in self.global_params:
-                interpreter.symtable[key] = result[key] = self.global_params[key]
+                value = self.global_params[key]
             elif self.params[key].get("formula"):
                 value = interpreter(self.params[key]["formula"])
-                interpreter.symtable[key] = result[key] = value
             elif "amount" in self.params[key]:
-                interpreter.symtable[key] = result[key] = self.params[key]["amount"]
+                value = self.params[key]["amount"]
             else:
                 raise ValueError(
                     u"No suitable formula or static amount found " u"in {}".format(key)
                 )
+            result[key] = value
+            self.interpreter.add_symbols({key: value})
         return result
 
     def evaluate_and_set_amount_field(self):
