@@ -112,13 +112,18 @@ class PintInterpreter(Interpreter):
         except self.UndefinedUnitError:
             return False
 
-    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False, include_pint_units=False):
+    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False, include_pint_units=False,
+                            no_pint_units=None):
         """Parses the given expression and returns a list of symbols, which are neither contained in the symtable,
         nor in known_symbols, nor can be interpreted as pint units"""
         unknown_symbols = super().get_unknown_symbols(text=text, known_symbols=known_symbols,
                                                       ignore_symtable=ignore_symtable)
+
+        # exclude symbols which can be parsed as pint units and are not in `no_pint_units`
         if not include_pint_units:
-            unknown_symbols = {s for s in unknown_symbols if not self.is_pint_unit_symbol(s)}
+            if no_pint_units is None:
+                no_pint_units = set()
+            unknown_symbols = {s for s in unknown_symbols if s in no_pint_units or not self.is_pint_unit_symbol(s)}
 
         return unknown_symbols
 

@@ -22,6 +22,7 @@ class ParameterSet(object):
         self.global_params = global_params or {}
         self.interpreter = interpreter or Interpreter()
         self.basic_validation()
+        self.all_param_names = set(self.params).union(set(self.global_params))
         self.references = self.get_references()
         for name, references in self.references.items():
             if name in references:
@@ -249,6 +250,18 @@ class PintParameterSet(ParameterSet):
 
     def _is_numeric(self, value):
         return super()._is_numeric(value) or isinstance(value, self.interpreter.GeneralQuantity)
+
+    def get_references(self):
+        """Create dictionary of parameter references"""
+        refs = {
+            key: self.interpreter.get_unknown_symbols(
+                value.get("formula"),
+                no_pint_units=self.all_param_names  # ensures that parameter names are not accidentally parsed as units
+            )
+            for key, value in self.params.items()
+        }
+        refs.update({key: set() for key in self.global_params})
+        return refs
 
     def evaluate_and_set_amount_field(self):
         """
