@@ -6,6 +6,10 @@ from asteval import NameFinder
 
 class Interpreter(ASTInterpreter):
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.BUILTIN_SYMBOLS = set(self.symtable)
+
     def get_symbols(self, text):
         """
         Parses an expression and returns all symbols.
