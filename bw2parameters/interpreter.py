@@ -43,9 +43,22 @@ class Interpreter(ASTInterpreter):
             return
         self.symtable.update(symbols)
 
+    def remove_symbols(self, symbols):
+        """Removes symbols from the symtable."""
+        if symbols is None:
+            return
+        if isinstance(symbols, dict):
+            symbols = set(symbols)
+        for symbol in symbols:
+            self.symtable.pop(symbol)
+
+    def user_defined_symbols(self):
+        return set(self.symtable).difference(self.BUILTIN_SYMBOLS)
+
     def eval(self, expr, *args, known_symbols=None, raise_errors=True, **kwargs):
         self.add_symbols(known_symbols)
         result = super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
+        self.remove_symbols(known_symbols)
         return result
 
 
@@ -126,4 +139,5 @@ class PintInterpreter(Interpreter):
         pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False, as_dict=True)
         self.add_symbols(pint_symbols)
         result = super().eval(expr=expr, *args, **kwargs)
+        self.remove_symbols(known_symbols)
         return result
