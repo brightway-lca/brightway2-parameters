@@ -38,6 +38,8 @@ class TestPintInterpreter(InterpreterTests):
         assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=['n'], **kwargs)
         assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=('n',), **kwargs)
         assert set() == i.get_unknown_symbols(None, **kwargs)
+        assert set() == i.get_unknown_symbols('kg * m + 2', **kwargs)
+        assert {'kg'} == i.get_unknown_symbols('kg * m + 2', no_pint_units={'kg'}, **kwargs)
 
     def test_get_pint_symbols(self):
         i = self.Interpreter()
