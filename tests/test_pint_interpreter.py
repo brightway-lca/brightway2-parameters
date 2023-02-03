@@ -45,6 +45,9 @@ def test_get_pint_symbols():
     assert result == {"kg", "g"}
     result = i.get_pint_symbols(text=text, ignore_symtable=False, as_dict=False)
     assert result == {"g"}
+    # test text=None
+    assert i.get_pint_symbols(None) == dict()
+    assert i.get_pint_symbols(None, as_dict=False) == set()
 
 
 def test_eval():

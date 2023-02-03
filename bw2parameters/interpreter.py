@@ -10,14 +10,18 @@ class Interpreter(ASTInterpreter):
         """
         Parses an expression and returns all symbols.
         """
+        if text is None:
+            return set()
         nf = NameFinder()
         nf.generic_visit(self.parse(text))
-        return nf.names
+        return set(nf.names)
 
     def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False):
         """
         Parses an expression and returns all symbols which are neither in the symtable nor passed via known_symbols.
         """
+        if text is None:
+            return set()
         if known_symbols is None:
             known_symbols = set()
         elif isinstance(known_symbols, Iterable):
@@ -79,6 +83,11 @@ class PintInterpreter(Interpreter):
         """
         Parses an expression and returns all symbols which can be interpreted as pint units.
         """
+        if text is None:
+            if as_dict:
+                return dict()
+            else:
+                return set()
         # get all unknown symbols
         unknown_symbols = self.get_unknown_symbols(text=text, known_symbols=known_symbols,
                                                    ignore_symtable=ignore_symtable)
