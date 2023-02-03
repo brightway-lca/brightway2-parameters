@@ -81,3 +81,17 @@ class TestPintInterpreter(InterpreterTests):
         # test known_symbols not permanently added to symtable
         assert "g" not in i.symtable
         assert i("1 kg + 200 g") == ureg("1.2 kg")
+
+    def test_parameter_list_to_dict(self):
+        i = self.Interpreter()
+        param_list = [
+            {"name": "A", "amount": 1, "data": {"unit": "kg"}},
+            {"name": "B", "amount": 2, "unit": "m"},
+            {"name": "C", "amount": 3}
+        ]
+        expected = {
+            "A": i.ureg("1 kilogram"),
+            "B": i.ureg("2 meter"),
+            "C": i.ureg("3 unit"),
+        }
+        assert expected == self.Interpreter.parameter_list_to_dict(param_list=param_list)

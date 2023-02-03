@@ -61,6 +61,10 @@ class Interpreter(ASTInterpreter):
         self.remove_symbols(known_symbols)
         return result
 
+    @classmethod
+    def parameter_list_to_dict(cls, param_list):
+        return {d["name"]: d["amount"] for d in param_list}
+
 
 class PintInterpreter(Interpreter):
     string_preprocessor = None
@@ -159,3 +163,13 @@ class PintInterpreter(Interpreter):
         result = super().eval(expr=expr, *args, **kwargs)
         self.remove_symbols(known_symbols)
         return result
+
+    @classmethod
+    def parameter_list_to_dict(cls, param_list):
+        return {
+            d["name"]: cls.Quantity(
+                value=d["amount"],
+                units=d.get("unit") or d.get("data", {}).get("unit") or ""
+            )
+            for d in param_list
+        }
