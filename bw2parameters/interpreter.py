@@ -71,13 +71,13 @@ class PintInterpreter(Interpreter):
     @classmethod
     def _setup_pint(cls):
         try:
-            from pint import UnitRegistry, UndefinedUnitError, Quantity
+            from pint import UnitRegistry, UndefinedUnitError
             from pint.util import string_preprocessor
         except ImportError:
             raise ImportError("Module pint could not be loaded. Please install pint: `pip install pint`.")
         cls.string_preprocessor = string_preprocessor
-        cls.Quantity = Quantity
         cls.ureg = UnitRegistry()
+        cls.Quantity = cls.ureg.Quantity
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
@@ -148,7 +148,7 @@ class PintInterpreter(Interpreter):
         if symbols is None:
             return
         for k, v in symbols.items():
-            if isinstance(v, self.Quantity) and v._REGISTRY != self.ureg:
+            if hasattr(v, "_REGISTRY") and v._REGISTRY != self.ureg:
                 symbols[k] = self.ureg(str(v))
         super().add_symbols(symbols=symbols)
 
