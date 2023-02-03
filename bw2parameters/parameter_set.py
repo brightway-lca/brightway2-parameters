@@ -7,7 +7,7 @@ import numpy as np
 from stats_arrays import uncertainty_choices
 from .errors import *
 from .interpreter import Interpreter, PintInterpreter
-from .utils import EXISTING_SYMBOLS, get_symbols, isidentifier, isstr
+from .utils import isidentifier, isstr
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
 Name: {}
@@ -75,7 +75,7 @@ class ParameterSet(object):
     def get_references(self):
         """Create dictionary of parameter references"""
         refs = {
-            key: get_symbols(value["formula"], interpreter=self.interpreter) if value.get("formula") else set()
+            key: self.interpreter.get_unknown_symbols(value.get("formula"))
             for key, value in self.params.items()
         }
         refs.update({key: set() for key in self.global_params})
@@ -104,7 +104,7 @@ class ParameterSet(object):
                 raise ValueError(
                     u"Parameter label {} not a valid Python name".format(key)
                 )
-            elif key in EXISTING_SYMBOLS:
+            elif key in self.interpreter.BUILTIN_SYMBOLS:
                 raise DuplicateName(
                     u"Parameter name {} is a built-in symbol".format(key)
                 )
@@ -256,6 +256,26 @@ class PintParameterSet(ParameterSet):
                 pass
 
     def get_order(self):
-        """Get a list of parameter name in an order that they can be safely evaluated"""
+        """Get a list of parameter names in an order that can be safely evaluated"""
         self._parse_units()
         return super().get_order()
+
+    def evaluate_and_set_amount_field(self):
+        """
+        Evaluate each formula. Updates the ``amount`` field of each parameter. Also updates the ``unit`` field
+        if no unit is given.
+        """
+        result = self.evaluate()
+        for key, value in self.params.items():
+            q = result[key]
+            if isinstance(q, self.interpreter.Quantity):
+                if "unit" in value:
+                    # convert quantity to given unit before reading magnitude
+                    value[u"amount"] = q.to(value["unit"]).m
+                else:
+                    # if no unit is given, document it in parameter dict
+                    value[u"unit"] = q.u
+                    value[u"amount"] = q.m
+            else:
+                value[u"amount"] = q
+        return result

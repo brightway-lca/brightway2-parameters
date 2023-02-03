@@ -11,7 +11,7 @@ from bw2parameters.errors import (
     ParameterError,
     SelfReference,
 )
-from bw2parameters.utils import get_symbols, isidentifier
+from bw2parameters.utils import isidentifier
 
 
 class TestParameterSet:
@@ -45,10 +45,6 @@ class TestParameterSet:
         }
         ds = self.ParameterSet(ds['parameters'])(ds)
         assert 'exchanges' not in ds
-
-    def test_find_symbols(self):
-        assert {'a', 'b', 'c'} == get_symbols('a * b + c')
-        assert {'a', 'b', 'c'} == get_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
 
     def test_isidentifier(self):
         assert isidentifier('foo')
