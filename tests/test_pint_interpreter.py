@@ -97,3 +97,13 @@ class TestPintInterpreter(InterpreterTests):
             "C": i.ureg("3 unit"),
         }
         assert expected == self.Interpreter.parameter_list_to_dict(param_list=param_list)
+
+    def test_different_unit_registries(self):
+        """Test that quantities from different unit registries are identified correctly."""
+        i = self.Interpreter()
+        q1 = i.ureg("1 kg")
+        q2 = i.Quantity(value=1, units="kg")
+        q3 = i.GeneralQuantity(value=1, units="kg")
+        assert all(i.is_quantity(q) for q in [q1, q2, q3])
+        assert all(i.is_quantity_from_same_registry(q) for q in [q1, q2])
+        assert not i.is_quantity_from_same_registry(q3)

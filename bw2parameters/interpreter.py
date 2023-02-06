@@ -76,14 +76,14 @@ class PintInterpreter(Interpreter):
     @classmethod
     def _setup_pint(cls):
         try:
-            from pint import UnitRegistry, UndefinedUnitError
+            from pint import UnitRegistry, UndefinedUnitError, Quantity
             from pint.util import string_preprocessor
         except ImportError:
             raise ImportError("Module pint could not be loaded. Please install pint: `pip install pint`.")
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.Quantity = cls.ureg.Quantity
-        cls.GeneralQuantity = UnitRegistry.Quantity
+        cls.GeneralQuantity = Quantity
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
@@ -151,6 +151,12 @@ class PintInterpreter(Interpreter):
             pint_symbols = set(pint_symbols)
         return pint_symbols
 
+    def is_quantity(self, value):
+        return isinstance(value, self.GeneralQuantity)
+
+    def is_quantity_from_same_registry(self, value):
+        return isinstance(value, self.Quantity)
+
     def add_symbols(self, symbols):
         """
         Adds symbols to symtable while making sure that pint Quantities are from same registry as self.ureg
@@ -160,8 +166,8 @@ class PintInterpreter(Interpreter):
             return
         for k, v in symbols.items():
             # if value is a quantity from another unit registry -> convert to current unit registry
-            if isinstance(v, self.GeneralQuantity) and not isinstance(v, self.Quantity):
-                symbols[k] = self.ureg(str(v))
+            if self.is_quantity(v) and not self.is_quantity_from_same_registry(v):
+                symbols[k] = self.Quantity(value=v.m, units=v.u)
         super().add_symbols(symbols=symbols)
 
     def eval(self, expr, *args, known_symbols=None, **kwargs):
