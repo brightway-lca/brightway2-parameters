@@ -5,7 +5,6 @@ from asteval import NameFinder
 
 
 class Interpreter(ASTInterpreter):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.BUILTIN_SYMBOLS = set(self.symtable)
@@ -20,7 +19,9 @@ class Interpreter(ASTInterpreter):
         nf.generic_visit(self.parse(text))
         return set(nf.names)
 
-    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False):
+    def get_unknown_symbols(
+        self, text, known_symbols=None, ignore_symtable=False
+    ):
         """
         Parses an expression and returns all symbols which are neither in the symtable nor passed via known_symbols.
         """
@@ -31,7 +32,9 @@ class Interpreter(ASTInterpreter):
         elif isinstance(known_symbols, Iterable):
             known_symbols = set(known_symbols)
         else:
-            raise ValueError(f"Parameter known_symbols must be iterable. Is {type(known_symbols)}.")
+            raise ValueError(
+                f"Parameter known_symbols must be iterable. Is {type(known_symbols)}."
+            )
         if not ignore_symtable:
             known_symbols = known_symbols.union(set(self.symtable.keys()))
         all_symbols = set(self.get_symbols(text))
@@ -55,9 +58,13 @@ class Interpreter(ASTInterpreter):
     def user_defined_symbols(self):
         return set(self.symtable).difference(self.BUILTIN_SYMBOLS)
 
-    def eval(self, expr, *args, known_symbols=None, raise_errors=True, **kwargs):
+    def eval(
+        self, expr, *args, known_symbols=None, raise_errors=True, **kwargs
+    ):
         self.add_symbols(known_symbols)
-        result = super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
+        result = super().eval(
+            expr=expr, *args, raise_errors=raise_errors, **kwargs
+        )
         self.remove_symbols(known_symbols)
         return result
 
@@ -76,10 +83,12 @@ class PintInterpreter(Interpreter):
     @classmethod
     def _setup_pint(cls):
         try:
-            from pint import UnitRegistry, UndefinedUnitError, Quantity
+            from pint import Quantity, UndefinedUnitError, UnitRegistry
             from pint.util import string_preprocessor
         except ImportError:
-            raise ImportError("Module pint could not be loaded. Please install pint: `pip install pint`.")
+            raise ImportError(
+                "Module pint could not be loaded. Please install pint: `pip install pint`."
+            )
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.Quantity = cls.ureg.Quantity
@@ -87,11 +96,14 @@ class PintInterpreter(Interpreter):
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-        import pint.util
         import re
+
+        import pint.util
+
         pint.util._subs_re_list[-1] = (r"([\w\.\)])\s+(?=[\w\(])", r"\1*")
         pint.util._subs_re = [
-            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b) for a, b in pint.util._subs_re_list
+            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
+            for a, b in pint.util._subs_re_list
         ]
 
     def __init__(self, *args, units=None, **kwargs):
@@ -112,22 +124,37 @@ class PintInterpreter(Interpreter):
         except self.UndefinedUnitError:
             return False
 
-    def get_unknown_symbols(self, text, known_symbols=None, ignore_symtable=False, include_pint_units=False,
-                            no_pint_units=None):
+    def get_unknown_symbols(
+        self,
+        text,
+        known_symbols=None,
+        ignore_symtable=False,
+        include_pint_units=False,
+        no_pint_units=None,
+    ):
         """Parses the given expression and returns a list of symbols, which are neither contained in the symtable,
         nor in known_symbols, nor can be interpreted as pint units"""
-        unknown_symbols = super().get_unknown_symbols(text=text, known_symbols=known_symbols,
-                                                      ignore_symtable=ignore_symtable)
+        unknown_symbols = super().get_unknown_symbols(
+            text=text,
+            known_symbols=known_symbols,
+            ignore_symtable=ignore_symtable,
+        )
 
         # exclude symbols which can be parsed as pint units and are not in `no_pint_units`
         if not include_pint_units:
             if no_pint_units is None:
                 no_pint_units = set()
-            unknown_symbols = {s for s in unknown_symbols if s in no_pint_units or not self.is_pint_unit_symbol(s)}
+            unknown_symbols = {
+                s
+                for s in unknown_symbols
+                if s in no_pint_units or not self.is_pint_unit_symbol(s)
+            }
 
         return unknown_symbols
 
-    def get_pint_symbols(self, text, known_symbols=None, ignore_symtable=True, as_dict=True):
+    def get_pint_symbols(
+        self, text, known_symbols=None, ignore_symtable=True, as_dict=True
+    ):
         """
         Parses an expression and returns all symbols which can be interpreted as pint units.
         """
@@ -137,8 +164,11 @@ class PintInterpreter(Interpreter):
             else:
                 return set()
         # get all unknown symbols (incl. unit symbols)
-        unknown_symbols = super().get_unknown_symbols(text=text, known_symbols=known_symbols,
-                                                      ignore_symtable=ignore_symtable)
+        unknown_symbols = super().get_unknown_symbols(
+            text=text,
+            known_symbols=known_symbols,
+            ignore_symtable=ignore_symtable,
+        )
         # check which of them can be interpreted by pint
         pint_symbols = {}
         for s in unknown_symbols:
@@ -166,13 +196,17 @@ class PintInterpreter(Interpreter):
             return
         for k, v in symbols.items():
             # if value is a quantity from another unit registry -> convert to current unit registry
-            if self.is_quantity(v) and not self.is_quantity_from_same_registry(v):
+            if self.is_quantity(v) and not self.is_quantity_from_same_registry(
+                v
+            ):
                 symbols[k] = self.Quantity(value=v.m, units=v.u)
         super().add_symbols(symbols=symbols)
 
     def eval(self, expr, *args, known_symbols=None, **kwargs):
         self.add_symbols(known_symbols)
-        pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False, as_dict=True)
+        pint_symbols = self.get_pint_symbols(
+            text=expr, ignore_symtable=False, as_dict=True
+        )
         self.add_symbols(pint_symbols)
         result = super().eval(expr=expr, *args, **kwargs)
         self.remove_symbols(known_symbols)
@@ -183,7 +217,7 @@ class PintInterpreter(Interpreter):
         return {
             d["name"]: cls.Quantity(
                 value=d["amount"],
-                units=d.get("unit") or d.get("data", {}).get("unit") or ""
+                units=d.get("unit") or d.get("data", {}).get("unit") or "",
             )
             for d in param_list
         }

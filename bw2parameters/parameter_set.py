@@ -3,8 +3,8 @@ from numbers import Number
 from pprint import pformat
 
 import numpy as np
-
 from stats_arrays import uncertainty_choices
+
 from .errors import *
 from .interpreter import Interpreter, PintInterpreter
 from .utils import isidentifier, isstr
@@ -27,7 +27,7 @@ class ParameterSet(object):
         for name, references in self.references.items():
             if name in references:
                 raise SelfReference(
-                    u"Formula for parameter {} references itself".format(name)
+                    "Formula for parameter {} references itself".format(name)
                 )
 
         self.order = self.get_order()
@@ -58,17 +58,21 @@ class ParameterSet(object):
                 if wrong_case:
                     raise CapitalizationError(
                         (
-                            u"Possible errors in upper/lower case letters for some parameters.\n"
-                            u"Unmatched references:\n{}\nMatched references:\n{}"
+                            "Possible errors in upper/lower case letters for some parameters.\n"
+                            "Unmatched references:\n{}\nMatched references:\n{}"
                         ).format(
-                            pformat(refs, indent=2), pformat(sorted(seen), indent=2)
+                            pformat(refs, indent=2),
+                            pformat(sorted(seen), indent=2),
                         )
                     )
                 raise ParameterError(
                     (
-                        u"Undefined or circular references for the following:"
-                        u"\n{}\nExisting references:\n{}"
-                    ).format(pformat(refs, indent=2), pformat(sorted(order), indent=2))
+                        "Undefined or circular references for the following:"
+                        "\n{}\nExisting references:\n{}"
+                    ).format(
+                        pformat(refs, indent=2),
+                        pformat(sorted(order), indent=2),
+                    )
                 )
 
         return order
@@ -88,42 +92,44 @@ class ParameterSet(object):
     def basic_validation(self):
         """Basic validation needed to build ``references`` and ``order``"""
         if not isinstance(self.params, dict):
-            raise ValueError(u"Parameters are not a dictionary")
+            raise ValueError("Parameters are not a dictionary")
         if not isinstance(self.global_params, dict):
-            raise ValueError(u"Global parameters are not a dictionary")
+            raise ValueError("Global parameters are not a dictionary")
         for key, value in self.params.items():
             if not isinstance(value, dict):
-                raise ValueError(u"Parameter value {} is not a dictionary".format(key))
+                raise ValueError(
+                    "Parameter value {} is not a dictionary".format(key)
+                )
             elif not (
-                    self._is_numeric(value.get("amount"))
-                    or isstr(value.get("formula"))
+                self._is_numeric(value.get("amount"))
+                or isstr(value.get("formula"))
             ):
                 raise ValueError(
                     (
-                        u"Parameter {} must have either ``amount`` "
-                        u"or ``formula`` field"
+                        "Parameter {} must have either ``amount`` "
+                        "or ``formula`` field"
                     ).format(key)
                 )
             elif not isidentifier(key):
                 raise ValueError(
-                    u"Parameter label {} not a valid Python name".format(key)
+                    "Parameter label {} not a valid Python name".format(key)
                 )
             elif key in self.interpreter.BUILTIN_SYMBOLS:
                 raise DuplicateName(
-                    u"Parameter name {} is a built-in symbol".format(key)
+                    "Parameter name {} is a built-in symbol".format(key)
                 )
         for key, value in self.global_params.items():
             if not self._is_numeric(value):
                 raise ValueError(
                     (
-                        u"Global parameter {} does not have a " u"numeric value: {}"
+                        "Global parameter {} does not have a "
+                        "numeric value: {}"
                     ).format(key, value)
                 )
             elif not isidentifier(key):
                 raise ValueError(
-                    u"Global parameter label {} not a valid " u"Python name".format(
-                        key
-                    )
+                    "Global parameter label {} not a valid "
+                    "Python name".format(key)
                 )
 
     def evaluate(self):
@@ -139,7 +145,8 @@ class ParameterSet(object):
                 value = self.params[key]["amount"]
             else:
                 raise ValueError(
-                    u"No suitable formula or static amount found " u"in {}".format(key)
+                    "No suitable formula or static amount found "
+                    "in {}".format(key)
                 )
             result[key] = value
             self.interpreter.add_symbols({key: value})
@@ -149,7 +156,7 @@ class ParameterSet(object):
         """Evaluate each formula. Updates the ``amount`` field of each parameter."""
         result = self.evaluate()
         for key, value in self.params.items():
-            value[u"amount"] = result[key]
+            value["amount"] = result[key]
         return result
 
     def evaluate_monte_carlo(self, iterations=1000):
@@ -173,7 +180,9 @@ class ParameterSet(object):
                     obj["uncertainty_type"] = obj["uncertainty type"]
                 obj["loc"] = obj.get("loc") or obj["amount"]
             kls = uncertainty_choices[obj["uncertainty_type"]]
-            return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
+            return kls.bounded_random_variables(
+                kls.from_dicts(obj), iterations
+            ).ravel()
 
         def fix_shape(array):
             if array is None:
@@ -221,7 +230,7 @@ class ParameterSet(object):
         interpreter = self.get_interpreter()
         for obj in ds:
             if "formula" in obj and "amount" not in obj:
-                obj[u"amount"] = interpreter(obj["formula"])
+                obj["amount"] = interpreter(obj["formula"])
 
         # Changes in-place, but return anyway
         return ds
@@ -242,21 +251,24 @@ class ParameterSet(object):
 
 
 class PintParameterSet(ParameterSet):
-
     def __init__(self, params, global_params=None, interpreter=None):
         if interpreter is None:
             interpreter = PintInterpreter()
-        super().__init__(params=params, global_params=global_params, interpreter=interpreter)
+        super().__init__(
+            params=params, global_params=global_params, interpreter=interpreter
+        )
 
     def _is_numeric(self, value):
-        return super()._is_numeric(value) or isinstance(value, self.interpreter.GeneralQuantity)
+        return super()._is_numeric(value) or isinstance(
+            value, self.interpreter.GeneralQuantity
+        )
 
     def get_references(self):
         """Create dictionary of parameter references"""
         refs = {
             key: self.interpreter.get_unknown_symbols(
                 value.get("formula"),
-                no_pint_units=self.all_param_names  # ensures that parameter names are not accidentally parsed as units
+                no_pint_units=self.all_param_names,  # ensures that parameter names are not accidentally parsed as units
             )
             for key, value in self.params.items()
         }
@@ -274,11 +286,11 @@ class PintParameterSet(ParameterSet):
             if isinstance(q, self.interpreter.Quantity):
                 if "unit" in value:
                     # convert quantity to given unit before reading magnitude
-                    value[u"amount"] = q.to(value["unit"]).m
+                    value["amount"] = q.to(value["unit"]).m
                 else:
                     # if no unit is given, document it in parameter dict
-                    value[u"unit"] = q.u
-                    value[u"amount"] = q.m
+                    value["unit"] = q.u
+                    value["amount"] = q.m
             else:
-                value[u"amount"] = q
+                value["amount"] = q
         return result
