@@ -72,6 +72,13 @@ class Interpreter(ASTInterpreter):
     def parameter_list_to_dict(cls, param_list):
         return {d["name"]: d["amount"] for d in param_list}
 
+    @classmethod
+    def is_quantity(cls, value):
+        return False
+
+    @classmethod
+    def is_quantity_from_same_registry(cls, value):
+        return False
 
 class PintInterpreter(Interpreter):
     string_preprocessor = None
@@ -181,11 +188,13 @@ class PintInterpreter(Interpreter):
             pint_symbols = set(pint_symbols)
         return pint_symbols
 
-    def is_quantity(self, value):
-        return isinstance(value, self.GeneralQuantity)
+    @classmethod
+    def is_quantity(cls, value):
+        return isinstance(value, cls.GeneralQuantity)
 
-    def is_quantity_from_same_registry(self, value):
-        return isinstance(value, self.Quantity)
+    @classmethod
+    def is_quantity_from_same_registry(cls, value):
+        return isinstance(value, cls.Quantity)
 
     def add_symbols(self, symbols):
         """
