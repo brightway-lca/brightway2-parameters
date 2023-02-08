@@ -84,6 +84,10 @@ class TestPintInterpreter(InterpreterTests):
         # test known_symbols not permanently added to symtable
         assert "g" not in i.symtable
         assert i("1 kg + 200 g") == ureg("1.2 kg")
+        # test unit "unit" defined
+        assert i("1 unit") == i.Quantity(1, "dimensionless")
+        # test formula without unit returns no quantity
+        assert i("1+2") == 3
 
     def test_parameter_list_to_dict(self):
         i = self.Interpreter()
