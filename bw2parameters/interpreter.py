@@ -80,10 +80,15 @@ class Interpreter(ASTInterpreter):
     def is_quantity_from_same_registry(cls, value):
         return False
 
+    @classmethod
+    def get_unit_dimensionality(cls, unit_name=None):
+        return dict()
+
 class PintInterpreter(Interpreter):
     string_preprocessor = None
     Quantity = None
     GeneralQuantity = None
+    Unit = None
     ureg = None
     UndefinedUnitError = None
 
@@ -99,6 +104,7 @@ class PintInterpreter(Interpreter):
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.Quantity = cls.ureg.Quantity
+        cls.Unit = cls.ureg.Unit
         cls.GeneralQuantity = Quantity
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
@@ -230,3 +236,7 @@ class PintInterpreter(Interpreter):
             )
             for d in param_list
         }
+
+    @classmethod
+    def get_unit_dimensionality(cls, unit_name=None):
+        return dict(**cls.Unit(unit_name or "").dimensionality)
