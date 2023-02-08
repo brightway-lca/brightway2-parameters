@@ -217,6 +217,19 @@ class PintInterpreter(Interpreter):
                 symbols[k] = self.Quantity(value=v.m, units=v.u)
         super().add_symbols(symbols=symbols)
 
+    def _raise_proper_pint_exception(func):  # noqa
+        """Make sure that pint exceptions are correctly raised during evaluation"""
+
+        def wrapper(self, *args, **kwargs):
+            try:
+                return func(self, *args, **kwargs)  # noqa
+            except TypeError:
+                expr = args[0] if len(args) > 0 else kwargs.get("expr")
+                self.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
+
+        return wrapper
+
+    @_raise_proper_pint_exception  # noqa
     def eval(self, expr, *args, known_symbols=None, **kwargs):
         self.add_symbols(known_symbols)
         pint_symbols = self.get_pint_symbols(

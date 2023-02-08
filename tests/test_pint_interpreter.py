@@ -8,6 +8,7 @@ pint = pytest.importorskip("pint")
 if pint:
     ureg = pint.UnitRegistry()
     UndefinedUnitError = pint.UndefinedUnitError
+    DimensionalityError = pint.DimensionalityError
 
 
 class TestPintInterpreter(InterpreterTests):
@@ -107,3 +108,8 @@ class TestPintInterpreter(InterpreterTests):
         assert all(i.is_quantity(q) for q in [q1, q2, q3])
         assert all(i.is_quantity_from_same_registry(q) for q in [q1, q2])
         assert not i.is_quantity_from_same_registry(q3)
+
+    def test_pint_errors_properly_raised(self):
+        i = self.Interpreter()
+        with pytest.raises(DimensionalityError):
+            i("2 kg + 1")
