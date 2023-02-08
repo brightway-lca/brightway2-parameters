@@ -90,14 +90,57 @@ class TestPintInterpreter(InterpreterTests):
         param_list = [
             {"name": "A", "amount": 1, "data": {"unit": "kg"}},
             {"name": "B", "amount": 2, "unit": "m"},
-            {"name": "C", "amount": 3}
+            {"name": "C", "amount": 3, "unit": "unit"},
+            {"name": "parameter_1", "formula": "2 kg", "amount": 1},
+            {
+                "name": "parameter_2",
+                "formula": "2 kg",
+                "amount": 1,
+                "unit": "kg",
+            },
+            {
+                "name": "parameter_3",
+                "formula": "2 kg",
+                "amount": 1,
+                "data": {"unit": "kg"},
+            },
+            {
+                "name": "parameter_4",
+                "formula": "2 kg",
+                "amount": 1,
+                "data": {"unit": "m"},
+            },
+            {"name": "parameter_5", "amount": 2},
+            {"name": "parameter_6", "amount": 2, "unit": "kg"},
+            {"name": "parameter_7", "amount": 2, "data": {"unit": "kg"}},
+            {"name": "parameter_8", "amount": 2, "data": {"unit": "m"}},
+            {"name": "parameter_9", "amount": 2, "data": {}},
+            {"name": "parameter_10", "formula": "2 + 3", "amount": 5},
         ]
         expected = {
-            "A": i.ureg("1 kilogram"),
-            "B": i.ureg("2 meter"),
-            "C": i.ureg("3 unit"),
+            "A": i.Quantity(1, "kg"),
+            "B": i.Quantity(2, "m"),
+            "C": i.Quantity(3, "unit"),
+            "parameter_1": 1,
+            "parameter_2": i.Quantity(1, "kg"),
+            "parameter_3": i.Quantity(1, "kg"),
+            "parameter_4": i.Quantity(1, "m"),
+            "parameter_5": 2,
+            "parameter_6": i.Quantity(2, "kg"),
+            "parameter_7": i.Quantity(2, "kg"),
+            "parameter_8": i.Quantity(2, "m"),
+            "parameter_9": 2,
+            "parameter_10": 5,
         }
-        assert expected == self.Interpreter.parameter_list_to_dict(param_list=param_list)
+        result = self.Interpreter.parameter_list_to_dict(
+            param_list=param_list
+        )
+        assert result == expected
+        # no amount raises error
+        with pytest.raises(KeyError):
+            i.parameter_list_to_dict(
+                [{"name": "parameter_1", "formula": "2 kg"}]
+            )
 
     def test_different_unit_registries(self):
         """Test that quantities from different unit registries are identified correctly."""

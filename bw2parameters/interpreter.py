@@ -242,13 +242,14 @@ class PintInterpreter(Interpreter):
 
     @classmethod
     def parameter_list_to_dict(cls, param_list):
-        return {
-            d["name"]: cls.Quantity(
-                value=d["amount"],
-                units=d.get("unit") or d.get("data", {}).get("unit") or "",
-            )
-            for d in param_list
-        }
+        result = dict()
+        for d in param_list:
+            unit = d.get("unit") or d.get("data", {}).get("unit")
+            if unit:
+                result[d["name"]] = cls.Quantity(value=d["amount"], units=unit)
+            else:
+                result[d["name"]] = d["amount"]
+        return result
 
     @classmethod
     def get_unit_dimensionality(cls, unit_name=None):
