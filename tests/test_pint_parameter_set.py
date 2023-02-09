@@ -2,7 +2,7 @@
 import pytest
 
 from bw2parameters import PintParameterSet
-from test_parameter_set import TestParameterSet as ParameterSetTests
+from test_default_parameter_set import TestParameterSet as ParameterSetTests
 
 pint = pytest.importorskip("pint")
 

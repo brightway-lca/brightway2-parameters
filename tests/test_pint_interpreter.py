@@ -1,7 +1,7 @@
 import pytest
 
 from bw2parameters import PintInterpreter, PintWrapper
-from test_interpreter import TestInterpreter as InterpreterTests
+from test_default_interpreter import TestInterpreter as InterpreterTests
 
 pint = pytest.importorskip("pint")
 
