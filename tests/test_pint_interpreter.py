@@ -1,13 +1,14 @@
 import pytest
 
-from bw2parameters import PintInterpreter
+from bw2parameters import PintInterpreter, PintWrapper
 from test_interpreter import TestInterpreter as InterpreterTests
 
 pint = pytest.importorskip("pint")
 
 if pint:
-    ureg = pint.UnitRegistry()
-    UndefinedUnitError = pint.UndefinedUnitError
+    ureg = PintWrapper().ureg
+    other_ureg = pint.UnitRegistry()
+    UndefinedUnitError = PintWrapper.UndefinedUnitError
     DimensionalityError = pint.DimensionalityError
 
 
@@ -51,25 +52,21 @@ class TestPintInterpreter(InterpreterTests):
             "kg": ureg("1 kg"),
             "g": ureg("1 g"),
         }
-        # test as_dict flag
-        result = i.get_pint_symbols(text=text, as_dict=False)
-        assert result == {"kg", "g"}
         # test known_symbols parameter
-        result = i.get_pint_symbols(text=text, known_symbols=["kg"], as_dict=False)
+        result = set(i.get_pint_symbols(text=text, known_symbols=["kg"]))
         assert result == {"g"}
-        result = i.get_pint_symbols(text=text, known_symbols={"kg": 1}, as_dict=False)
+        result = set(i.get_pint_symbols(text=text, known_symbols={"kg": 1}))
         assert result == {"g"}
-        result = i.get_pint_symbols(text=text, known_symbols={"kg"}, as_dict=False)
+        result = set(i.get_pint_symbols(text=text, known_symbols={"kg"}))
         assert result == {"g"}
         # test ignore_symtable
         i.symtable["kg"] = 1
-        result = i.get_pint_symbols(text=text, ignore_symtable=True, as_dict=False)
+        result = set(i.get_pint_symbols(text=text, ignore_symtable=True))
         assert result == {"kg", "g"}
-        result = i.get_pint_symbols(text=text, ignore_symtable=False, as_dict=False)
+        result = set(i.get_pint_symbols(text=text, ignore_symtable=False))
         assert result == {"g"}
         # test text=None
         assert i.get_pint_symbols(None) == dict()
-        assert i.get_pint_symbols(None, as_dict=False) == set()
 
     def test_eval(self):
         i = self.Interpreter()
@@ -78,14 +75,14 @@ class TestPintInterpreter(InterpreterTests):
         # test pint units in symtable
         assert i.symtable["kg"] == ureg("1 kg")
         assert i.symtable["g"] == ureg("1 g")
-        # test g is a known symbol (and a quantity from other ureg than i.ureg)
-        result = i(text, known_symbols={"g": ureg("1 kg")})
+        # test g is a known symbol (and a quantity from other ureg than PintWrapper.ureg)
+        result = i(text, known_symbols={"g": other_ureg("1 kg")})
         assert result == ureg("201 kg")
         # test known_symbols not permanently added to symtable
         assert "g" not in i.symtable
         assert i("1 kg + 200 g") == ureg("1.2 kg")
         # test unit "unit" defined
-        assert i("1 unit") == i.Quantity(1, "dimensionless")
+        assert i("1 unit") == PintWrapper.Quantity(1, "dimensionless")
         # test formula without unit returns no quantity
         assert i("1+2") == 3
 
@@ -122,17 +119,17 @@ class TestPintInterpreter(InterpreterTests):
             {"name": "parameter_10", "formula": "2 + 3", "amount": 5},
         ]
         expected = {
-            "A": i.Quantity(1, "kg"),
-            "B": i.Quantity(2, "m"),
-            "C": i.Quantity(3, "unit"),
+            "A": PintWrapper.Quantity(1, "kg"),
+            "B": PintWrapper.Quantity(2, "m"),
+            "C": PintWrapper.Quantity(3, "unit"),
             "parameter_1": 1,
-            "parameter_2": i.Quantity(1, "kg"),
-            "parameter_3": i.Quantity(1, "kg"),
-            "parameter_4": i.Quantity(1, "m"),
+            "parameter_2": PintWrapper.Quantity(1, "kg"),
+            "parameter_3": PintWrapper.Quantity(1, "kg"),
+            "parameter_4": PintWrapper.Quantity(1, "m"),
             "parameter_5": 2,
-            "parameter_6": i.Quantity(2, "kg"),
-            "parameter_7": i.Quantity(2, "kg"),
-            "parameter_8": i.Quantity(2, "m"),
+            "parameter_6": PintWrapper.Quantity(2, "kg"),
+            "parameter_7": PintWrapper.Quantity(2, "kg"),
+            "parameter_8": PintWrapper.Quantity(2, "m"),
             "parameter_9": 2,
             "parameter_10": 5,
         }
@@ -145,16 +142,6 @@ class TestPintInterpreter(InterpreterTests):
             i.parameter_list_to_dict(
                 [{"name": "parameter_1", "formula": "2 kg"}]
             )
-
-    def test_different_unit_registries(self):
-        """Test that quantities from different unit registries are identified correctly."""
-        i = self.Interpreter()
-        q1 = i.ureg("1 kg")
-        q2 = i.Quantity(value=1, units="kg")
-        q3 = i.GeneralQuantity(value=1, units="kg")
-        assert all(i.is_quantity(q) for q in [q1, q2, q3])
-        assert all(i.is_quantity_from_same_registry(q) for q in [q1, q2])
-        assert not i.is_quantity_from_same_registry(q3)
 
     def test_pint_errors_properly_raised(self):
         i = self.Interpreter()

@@ -86,9 +86,6 @@ class ParameterSet(object):
         refs.update({key: set() for key in self.global_params})
         return refs
 
-    def _is_numeric(self, value):
-        return isinstance(value, (Number, np.ndarray))
-
     def basic_validation(self):
         """Basic validation needed to build ``references`` and ``order``"""
         if not isinstance(self.params, dict):
@@ -101,7 +98,7 @@ class ParameterSet(object):
                     "Parameter value {} is not a dictionary".format(key)
                 )
             elif not (
-                self._is_numeric(value.get("amount"))
+                self.interpreter.is_numeric(value.get("amount"))
                 or isstr(value.get("formula"))
             ):
                 raise ValueError(
@@ -119,7 +116,7 @@ class ParameterSet(object):
                     "Parameter name {} is a built-in symbol".format(key)
                 )
         for key, value in self.global_params.items():
-            if not self._is_numeric(value):
+            if not self.interpreter.is_numeric(value):
                 raise ValueError(
                     (
                         "Global parameter {} does not have a "
@@ -256,11 +253,6 @@ class PintParameterSet(ParameterSet):
             interpreter = PintInterpreter()
         super().__init__(
             params=params, global_params=global_params, interpreter=interpreter
-        )
-
-    def _is_numeric(self, value):
-        return super()._is_numeric(value) or isinstance(
-            value, self.interpreter.GeneralQuantity
         )
 
     def get_references(self):

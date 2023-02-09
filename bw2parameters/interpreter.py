@@ -1,13 +1,20 @@
 from collections.abc import Iterable
 
-from asteval import Interpreter as ASTInterpreter
-from asteval import NameFinder
+from asteval import Interpreter as ASTInterpreter  # asteval not in requirements # noqa
+from asteval import NameFinder  # asteval not in requirements # noqa
+from .pint import PintWrapper
+import numpy as np
+from numbers import Number
 
 
 class Interpreter(ASTInterpreter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.BUILTIN_SYMBOLS = set(self.symtable)
+
+    @classmethod
+    def is_numeric(cls, value):
+        return isinstance(value, (Number, np.ndarray))
 
     def get_symbols(self, text):
         """
@@ -81,7 +88,7 @@ class Interpreter(ASTInterpreter):
         return False
 
     @classmethod
-    def get_unit_dimensionality(cls, unit_name=None):
+    def get_unit_dimensionality(cls, unit_name=None):  # signature must be same for Interpreter and PintInterpreter # noqa
         return dict()
 
     @classmethod
@@ -90,57 +97,20 @@ class Interpreter(ASTInterpreter):
 
 
 class PintInterpreter(Interpreter):
-    string_preprocessor = None
-    Quantity = None
-    GeneralQuantity = None
-    Unit = None
-    ureg = None
-    UndefinedUnitError = None
-
-    @classmethod
-    def _setup_pint(cls):
-        try:
-            from pint import Quantity, UndefinedUnitError, UnitRegistry
-            from pint.util import string_preprocessor
-        except ImportError:
-            raise ImportError(
-                "Module pint could not be loaded. Please install pint: `pip install pint`."
-            )
-        cls.string_preprocessor = string_preprocessor
-        cls.ureg = UnitRegistry()
-        cls.Quantity = cls.ureg.Quantity
-        cls.Unit = cls.ureg.Unit
-        cls.GeneralQuantity = Quantity
-        cls.ureg.define("unit = [] = dimensionless")
-        cls.UndefinedUnitError = UndefinedUnitError
-        # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-        import re
-
-        import pint.util
-
-        pint.util._subs_re_list[-1] = (r"([\w\.\)])\s+(?=[\w\(])", r"\1*")
-        pint.util._subs_re = [
-            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
-            for a, b in pint.util._subs_re_list
-        ]
 
     def __init__(self, *args, units=None, **kwargs):
-        if self.string_preprocessor is None:
-            self._setup_pint()
         super().__init__(*args, **kwargs)
+        if not PintWrapper.pint_loaded:
+            PintWrapper()
         if units is not None:
-            self.add_symbols({u: self.ureg(u) for u in units})
+            self.add_symbols(PintWrapper.to_units(units, raise_errors=True))
+
+    @classmethod
+    def is_numeric(cls, value):
+        return super().is_numeric(value) or isinstance(value, PintWrapper.GeneralQuantity)
 
     def parse(self, text):
-        return super().parse(PintInterpreter.string_preprocessor(text))
-
-    def is_pint_unit_symbol(self, symbol):
-        """Returns True if the given symbol can be interpreted as a pint unit, False otherwise"""
-        try:
-            self.ureg(symbol)
-            return True
-        except self.UndefinedUnitError:
-            return False
+        return super().parse(PintWrapper.string_preprocessor(text))
 
     def get_unknown_symbols(
         self,
@@ -160,52 +130,40 @@ class PintInterpreter(Interpreter):
 
         # exclude symbols which can be parsed as pint units and are not in `no_pint_units`
         if not include_pint_units:
-            if no_pint_units is None:
-                no_pint_units = set()
-            unknown_symbols = {
-                s
-                for s in unknown_symbols
-                if s in no_pint_units or not self.is_pint_unit_symbol(s)
-            }
+            pint_units = PintWrapper.to_units(unknown_symbols, raise_errors=False, drop_none=True)
+            # exclude explicitly defined symbols
+            pint_units = set(pint_units).difference(no_pint_units or set())
+            unknown_symbols = unknown_symbols.difference(pint_units)
 
         return unknown_symbols
 
-    def get_pint_symbols(
-        self, text, known_symbols=None, ignore_symtable=True, as_dict=True
-    ):
+    def get_pint_symbols(self, text, known_symbols=None, ignore_symtable=True):
         """
         Parses an expression and returns all symbols which can be interpreted as pint units.
         """
         if text is None:
-            if as_dict:
-                return dict()
-            else:
-                return set()
-        # get all unknown symbols (incl. unit symbols)
+            return dict()
+        # get all unknown symbols
         unknown_symbols = super().get_unknown_symbols(
             text=text,
             known_symbols=known_symbols,
             ignore_symtable=ignore_symtable,
         )
-        # check which of them can be interpreted by pint
-        pint_symbols = {}
-        for s in unknown_symbols:
-            try:
-                pint_symbols[s] = self.ureg(s)
-            except self.UndefinedUnitError:
-                pass
-        # return dict or set
-        if not as_dict:
-            pint_symbols = set(pint_symbols)
+        # filter those which can be interpreted as a pint.Unit
+        pint_symbols = PintWrapper.to_units(unknown_symbols, raise_errors=False, drop_none=True)
         return pint_symbols
 
     @classmethod
     def is_quantity(cls, value):
-        return isinstance(value, cls.GeneralQuantity)
+        return PintWrapper.is_quantity(value)
 
     @classmethod
     def is_quantity_from_same_registry(cls, value):
-        return isinstance(value, cls.Quantity)
+        return PintWrapper.is_quantity_from_same_registry(value)
+
+    @classmethod
+    def get_dimensionality(cls, unit_name=None):
+        return PintWrapper.get_dimensionality(unit_name)
 
     def add_symbols(self, symbols):
         """
@@ -216,10 +174,10 @@ class PintInterpreter(Interpreter):
             return
         for k, v in symbols.items():
             # if value is a quantity from another unit registry -> convert to current unit registry
-            if self.is_quantity(v) and not self.is_quantity_from_same_registry(
+            if PintWrapper.is_quantity(v) and not PintWrapper.is_quantity_from_same_registry(
                 v
             ):
-                symbols[k] = self.Quantity(value=v.m, units=v.u)
+                symbols[k] = PintWrapper.Quantity(value=v.m, units=v.u)
         super().add_symbols(symbols=symbols)
 
     def _raise_proper_pint_exception(func):  # noqa
@@ -230,16 +188,14 @@ class PintInterpreter(Interpreter):
                 return func(self, *args, **kwargs)  # noqa
             except TypeError:
                 expr = args[0] if len(args) > 0 else kwargs.get("expr")
-                self.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
+                PintWrapper.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
 
         return wrapper
 
     @_raise_proper_pint_exception  # noqa
     def eval(self, expr, *args, known_symbols=None, **kwargs):
         self.add_symbols(known_symbols)
-        pint_symbols = self.get_pint_symbols(
-            text=expr, ignore_symtable=False, as_dict=True
-        )
+        pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False)
         self.add_symbols(pint_symbols)
         result = super().eval(expr=expr, *args, **kwargs)
         self.remove_symbols(known_symbols)
@@ -247,27 +203,27 @@ class PintInterpreter(Interpreter):
 
     @classmethod
     def parameter_list_to_dict(cls, param_list):
-        result = dict()
-        for d in param_list:
-            unit = d.get("unit") or d.get("data", {}).get("unit")
-            if unit:
-                result[d["name"]] = cls.Quantity(value=d["amount"], units=unit)
-            else:
-                result[d["name"]] = d["amount"]
-        return result
-
-    @classmethod
-    def get_unit_dimensionality(cls, unit_name=None):
-        return dict(**cls.Unit(unit_name or "").dimensionality)
+        """
+        Takes a list of parameter objects and returns a dict where keys are the parameter names and values
+        are the interpreted pint.Quantities (or float where no unit is defined).
+        """
+        return {
+            d["name"]: PintWrapper.to_quantity(
+                amount=d["amount"],
+                unit=d.get("unit") or d.get("data", {}).get("unit")
+            )
+            for d in param_list
+        }
 
     @classmethod
     def set_amount_and_unit(cls, obj, quantity=None, to_unit=None):
         """
-        This function takes an arbitrary object and tries to set it's `amount` and `unit` fields. It implements some \
-        prioritization logic: `amount` will be the magnitude of the pint.Quantity after conversion to `to_unit`. \
+        Takes an arbitrary object and tries to set it's `amount` and `unit` fields. `amount` field is the magnitude of
+        the pint.Quantity after conversion to `to_unit`. \
         If no `to_unit` is given, the quantity's own unit will be used. If the input is not a pint.Quantity then
         `obj['unit']` will be used. If no quantity is given, then `obj['amount']` and `obj['unit']` are used.
         """
+        # todo: implement tests
         # quantity is None
         if quantity is None and to_unit is None:
             return
@@ -278,7 +234,7 @@ class PintInterpreter(Interpreter):
             is_quantity = cls.is_quantity(quantity)
         # missing quantity unit
         if not is_quantity and "unit" in obj:
-            quantity = cls.Quantity(value=quantity, units=obj["unit"])
+            quantity = PintWrapper.Quantity(value=quantity, units=obj["unit"])
         elif is_quantity and "unit" not in obj:
             obj["unit"] = str(quantity.u)
         elif is_quantity and "unit" in obj:

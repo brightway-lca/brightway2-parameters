@@ -1,5 +1,6 @@
 __version__ = (1, 0, 0)
 
+from .pint import PintWrapper
 from .interpreter import Interpreter, PintInterpreter  # noqa
 from .mangling import (
     FormulaSubstitutor,
