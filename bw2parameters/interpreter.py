@@ -84,6 +84,11 @@ class Interpreter(ASTInterpreter):
     def get_unit_dimensionality(cls, unit_name=None):
         return dict()
 
+    @classmethod
+    def set_amount_and_unit(cls, obj, quantity, to_unit=None):
+        obj["amount"] = quantity
+
+
 class PintInterpreter(Interpreter):
     string_preprocessor = None
     Quantity = None
@@ -254,3 +259,39 @@ class PintInterpreter(Interpreter):
     @classmethod
     def get_unit_dimensionality(cls, unit_name=None):
         return dict(**cls.Unit(unit_name or "").dimensionality)
+
+    @classmethod
+    def set_amount_and_unit(cls, obj, quantity=None, to_unit=None):
+        """
+        This function takes an arbitrary object and tries to set it's `amount` and `unit` fields. It implements some \
+        prioritization logic: `amount` will be the magnitude of the pint.Quantity after conversion to `to_unit`. \
+        If no `to_unit` is given, the quantity's own unit will be used. If the input is not a pint.Quantity then
+        `obj['unit']` will be used. If no quantity is given, then `obj['amount']` and `obj['unit']` are used.
+        """
+        # quantity is None
+        if quantity is None and to_unit is None:
+            return
+        elif quantity is None:
+            quantity = obj["amount"]
+            is_quantity = False
+        else:
+            is_quantity = cls.is_quantity(quantity)
+        # missing quantity unit
+        if not is_quantity and "unit" in obj:
+            quantity = cls.Quantity(value=quantity, units=obj["unit"])
+        elif is_quantity and "unit" not in obj:
+            obj["unit"] = str(quantity.u)
+        elif is_quantity and "unit" in obj:
+            pass
+        elif not is_quantity and "unit" not in obj:
+            obj["amount"] = quantity
+            if to_unit:
+                obj["unit"] = to_unit
+            return
+        # unit conversion
+        if to_unit:
+            quantity = quantity.to(to_unit)
+            obj["unit"] = to_unit
+        else:
+            obj["unit"] = str(quantity.u)
+        obj["amount"] = quantity.m

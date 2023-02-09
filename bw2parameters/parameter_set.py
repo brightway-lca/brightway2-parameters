@@ -282,15 +282,8 @@ class PintParameterSet(ParameterSet):
         """
         result = self.evaluate()
         for key, value in self.params.items():
-            q = result[key]
-            if isinstance(q, self.interpreter.Quantity):
-                if "unit" in value:
-                    # convert quantity to given unit before reading magnitude
-                    value["amount"] = q.to(value["unit"]).m
-                else:
-                    # if no unit is given, document it in parameter dict
-                    value["unit"] = q.u
-                    value["amount"] = q.m
-            else:
-                value["amount"] = q
+            self.interpreter.set_amount_and_unit(
+                obj=value,
+                quantity=result[key],
+            )
         return result
