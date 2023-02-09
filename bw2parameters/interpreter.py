@@ -20,7 +20,7 @@ class Interpreter(ASTInterpreter):
         return set(nf.names)
 
     def get_unknown_symbols(
-        self, text, known_symbols=None, ignore_symtable=False
+        self, text, known_symbols=None, ignore_symtable=False, no_pint_units=None,
     ):
         """
         Parses an expression and returns all symbols which are neither in the symtable nor passed via known_symbols.
