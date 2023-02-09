@@ -3,11 +3,21 @@ from collections.abc import Iterable
 from asteval import Interpreter as ASTInterpreter  # asteval not in requirements # noqa
 from asteval import NameFinder  # asteval not in requirements # noqa
 from .pint import PintWrapper
+from .config import config
 import numpy as np
 from numbers import Number
 
 
-class Interpreter(ASTInterpreter):
+class InterpreterChooser:
+
+    def __new__(cls, *args, **kwargs):
+        if config.use_pint and PintWrapper.pint_installed:
+            return PintInterpreter(*args, **kwargs)
+        else:
+            return DefaultInterpreter(*args, **kwargs)
+
+
+class DefaultInterpreter(ASTInterpreter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.BUILTIN_SYMBOLS = set(self.symtable)
@@ -96,7 +106,7 @@ class Interpreter(ASTInterpreter):
         obj["amount"] = quantity
 
 
-class PintInterpreter(Interpreter):
+class PintInterpreter(DefaultInterpreter):
 
     def __init__(self, *args, units=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -194,6 +204,7 @@ class PintInterpreter(Interpreter):
 
     @_raise_proper_pint_exception  # noqa
     def eval(self, expr, *args, known_symbols=None, **kwargs):
+        # todo: prevent double call adding known_symbols
         self.add_symbols(known_symbols)
         pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False)
         self.add_symbols(pint_symbols)

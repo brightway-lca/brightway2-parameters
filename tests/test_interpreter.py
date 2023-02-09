@@ -1,10 +1,10 @@
 import pytest
 
-from bw2parameters import Interpreter
+from bw2parameters import DefaultInterpreter
 
 
 class TestInterpreter:
-    Interpreter = Interpreter
+    Interpreter = DefaultInterpreter
 
     def test_init(self):
         i = self.Interpreter()

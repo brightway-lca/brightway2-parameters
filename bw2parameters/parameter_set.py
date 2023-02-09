@@ -6,8 +6,10 @@ import numpy as np
 from stats_arrays import uncertainty_choices
 
 from .errors import *
-from .interpreter import Interpreter, PintInterpreter
+from .interpreter import PintInterpreter, DefaultInterpreter
 from .utils import isidentifier, isstr
+from .config import config
+from .pint import PintWrapper
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
 Name: {}
@@ -16,11 +18,20 @@ Expected shape: {}
 Returned shape: {}"""
 
 
-class ParameterSet(object):
+class ParameterSetChooser:
+
+    def __new__(cls, *args, **kwargs):
+        if config.use_pint and PintWrapper.pint_installed:
+            return PintParameterSet(*args, **kwargs)
+        else:
+            return DefaultParameterSet(*args, **kwargs)
+
+
+class DefaultParameterSet(object):
     def __init__(self, params, global_params=None, interpreter=None):
         self.params = params
         self.global_params = global_params or {}
-        self.interpreter = interpreter or Interpreter()
+        self.interpreter = interpreter or DefaultInterpreter()
         self.basic_validation()
         self.all_param_names = set(self.params).union(set(self.global_params))
         self.references = self.get_references()
@@ -247,7 +258,7 @@ class ParameterSet(object):
         return interpreter
 
 
-class PintParameterSet(ParameterSet):
+class PintParameterSet(DefaultParameterSet):
     def __init__(self, params, global_params=None, interpreter=None):
         if interpreter is None:
             interpreter = PintInterpreter()
