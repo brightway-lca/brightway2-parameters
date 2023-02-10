@@ -204,12 +204,9 @@ class PintInterpreter(DefaultInterpreter):
 
     @_raise_proper_pint_exception  # noqa
     def eval(self, expr, *args, known_symbols=None, **kwargs):
-        # todo: prevent double call adding known_symbols
-        self.add_symbols(known_symbols)
-        pint_symbols = self.get_pint_symbols(text=expr, ignore_symtable=False)
+        pint_symbols = self.get_pint_symbols(text=expr, known_symbols=known_symbols, ignore_symtable=False)
         self.add_symbols(pint_symbols)
-        result = super().eval(expr=expr, *args, **kwargs)
-        self.remove_symbols(known_symbols)
+        result = super().eval(expr=expr, known_symbols=known_symbols, *args, **kwargs)
         return result
 
     @classmethod
