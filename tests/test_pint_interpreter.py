@@ -147,3 +147,46 @@ class TestPintInterpreter(InterpreterTests):
         i = self.Interpreter()
         with pytest.raises(DimensionalityError):
             i("2 kg + 1")
+
+    def test_set_amount_and_unit(self):
+        i = self.Interpreter()
+        obj = {}
+        q = PintWrapper.Quantity(1, "kg")
+        i.set_amount_and_unit(obj, q)
+        assert obj == {"amount": 1, "unit": "kilogram"}
+        obj = {}
+        i.set_amount_and_unit(obj, q, "g")
+        assert obj == {"amount": 1000, "unit": "g"}
+        obj = {"amount": 1}
+        i.set_amount_and_unit(obj, None, "g")
+        assert obj == {"amount": 1, "unit": "g"}
+        obj = {"amount": 1}
+        i.set_amount_and_unit(obj)
+        assert obj == {"amount": 1}
+        obj = {"unit": 1}
+        i.set_amount_and_unit(obj)
+        assert obj == {"unit": 1}
+        obj = {"unit": "kg"}
+        q = PintWrapper.Quantity(1000, "g")
+        i.set_amount_and_unit(obj, q)
+        assert obj == {"amount": 1000, "unit": "gram"}
+        obj = {"unit": "kg"}
+        q = PintWrapper.Quantity(1000, "g")
+        i.set_amount_and_unit(obj, q, "mg")
+        assert obj == {"amount": 1000000, "unit": "mg"}
+        obj = {"amount": 2, "unit": "kg"}
+        q = PintWrapper.Quantity(1, "g")
+        i.set_amount_and_unit(obj, q)
+        assert obj == {"amount": 1, "unit": "gram"}
+        obj = {"amount": 2, "unit": "kg"}
+        q = PintWrapper.Quantity(1, "g")
+        i.set_amount_and_unit(obj, q, "mg")
+        assert obj == {"amount": 1000, "unit": "mg"}
+        obj = {"amount": 2, "unit": "kg"}
+        q = 1
+        i.set_amount_and_unit(obj, q)
+        assert obj == {"amount": 1, "unit": "kg"}
+        obj = {"amount": 2, "unit": "kg"}
+        q = 1
+        i.set_amount_and_unit(obj, q, "g")
+        assert obj == {"amount": 1000, "unit": "g"}

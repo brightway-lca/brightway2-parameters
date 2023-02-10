@@ -234,31 +234,20 @@ class PintInterpreter(DefaultInterpreter):
         If no `to_unit` is given, the quantity's own unit will be used. If the input is not a pint.Quantity then
         `obj['unit']` will be used. If no quantity is given, then `obj['amount']` and `obj['unit']` are used.
         """
-        # todo: implement tests
-        # quantity is None
-        if quantity is None and to_unit is None:
+        is_quantity = cls.is_quantity(quantity)
+        amount = quantity.m if is_quantity else quantity or obj.get("amount")
+        unit = str(quantity.u) if is_quantity else obj.get("unit") or to_unit
+        if amount is None:
             return
-        elif quantity is None:
-            quantity = obj["amount"]
-            is_quantity = False
+        if unit is None:
+            obj["amount"] = amount
+            return
+        to_unit = to_unit or unit
+        if unit == to_unit:
+            obj["amount"] = amount
+            obj["unit"] = unit
         else:
-            is_quantity = cls.is_quantity(quantity)
-        # missing quantity unit
-        if not is_quantity and "unit" in obj:
-            quantity = PintWrapper.Quantity(value=quantity, units=obj["unit"])
-        elif is_quantity and "unit" not in obj:
-            obj["unit"] = str(quantity.u)
-        elif is_quantity and "unit" in obj:
-            pass
-        elif not is_quantity and "unit" not in obj:
-            obj["amount"] = quantity
-            if to_unit:
-                obj["unit"] = to_unit
-            return
-        # unit conversion
-        if to_unit:
-            quantity = quantity.to(to_unit)
+            quantity = quantity if is_quantity else PintWrapper.to_quantity(amount, unit)
+            obj["amount"] = quantity.to(to_unit).m
             obj["unit"] = to_unit
-        else:
-            obj["unit"] = str(quantity.u)
-        obj["amount"] = quantity.m
+        
