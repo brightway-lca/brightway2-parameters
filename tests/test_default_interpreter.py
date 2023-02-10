@@ -1,6 +1,6 @@
 import pytest
 
-from bw2parameters import DefaultInterpreter
+from bw2parameters import DefaultInterpreter, MissingName
 
 
 class TestInterpreter:
@@ -38,15 +38,15 @@ class TestInterpreter:
         i = self.Interpreter()
         assert i.eval("1 + 1") == 2
         assert i("1 + 1") == 2
-        with pytest.raises(NameError):
+        with pytest.raises(MissingName):
             i("1 + a")
         # assert known_symbols added temporarily
         assert i("1 + a", known_symbols={"a": 2}) == 3
-        with pytest.raises(NameError):
+        with pytest.raises(MissingName):
             i("1 + a")
         # assert add_symbols added permanently
         i.add_symbols({"b": 3})
-        with pytest.raises(NameError):
+        with pytest.raises(MissingName):
             i("1 + a + b")
         assert i("1 + b") == 4
         assert i("1 + a + b", known_symbols={"a": 2}) == 6

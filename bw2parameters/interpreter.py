@@ -4,6 +4,7 @@ from asteval import Interpreter as ASTInterpreter  # asteval not in requirements
 from asteval import NameFinder  # asteval not in requirements # noqa
 from .pint import PintWrapper
 from .config import config
+from .errors import MissingName
 import numpy as np
 from numbers import Number
 
@@ -26,6 +27,21 @@ class DefaultInterpreter(ASTInterpreter):
     def is_numeric(cls, value):
         return isinstance(value, (Number, np.ndarray))
 
+    def _raise_missing_name(func):  # noqa
+        def wrapper(self, expr, *args, **kwargs):
+            try:
+                return func(self, expr, *args, **kwargs)
+            except (NameError, SyntaxError):
+                if isinstance(self, PintInterpreter):
+                    raise MissingName(expr)
+                elif config.use_pint is False:
+                    raise MissingName("One or more symbols could not be interpreted. Please check the formula. If it "
+                                      "contains units, please set `bw2parameters.config.use_pint = True`: "
+                                      f"{expr}") from None
+
+        return wrapper
+
+    @_raise_missing_name
     def get_symbols(self, text):
         """
         Parses an expression and returns all symbols.
@@ -75,6 +91,7 @@ class DefaultInterpreter(ASTInterpreter):
     def user_defined_symbols(self):
         return set(self.symtable).difference(self.BUILTIN_SYMBOLS)
 
+    @_raise_missing_name
     def eval(
         self, expr, *args, known_symbols=None, raise_errors=True, **kwargs
     ):
@@ -193,12 +210,15 @@ class PintInterpreter(DefaultInterpreter):
     def _raise_proper_pint_exception(func):  # noqa
         """Make sure that pint exceptions are correctly raised during evaluation"""
 
-        def wrapper(self, *args, **kwargs):
+        def wrapper(self, expr, *args, **kwargs):
             try:
-                return func(self, *args, **kwargs)  # noqa
+                return func(self, expr, *args, **kwargs)  # noqa
             except TypeError:
-                expr = args[0] if len(args) > 0 else kwargs.get("expr")
-                PintWrapper.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
+                try:
+                    PintWrapper.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
+                except Exception as error:
+                    error.extra_msg = f": {expr}"
+                    raise error from None  # omit previous exceptions
 
         return wrapper
 
@@ -247,4 +267,3 @@ class PintInterpreter(DefaultInterpreter):
             quantity = quantity if is_quantity else PintWrapper.to_quantity(amount, unit)
             obj["amount"] = quantity.to(to_unit).m
             obj["unit"] = to_unit
-        

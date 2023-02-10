@@ -10,6 +10,7 @@ from bw2parameters import (
     PintParameterSet,
     PintWrapper,
     config,
+    MissingName
 )
 
 
@@ -20,7 +21,7 @@ def test_choosers():
 
         # InterpreterChooser.__call__ raises error if units are in expression
         config.use_pint = False
-        with pytest.raises(SyntaxError):
+        with pytest.raises(MissingName):
             Interpreter()("1kg + 200g")
 
         # ParameterSet() returns empty default ParameterSet
