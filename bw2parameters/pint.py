@@ -17,6 +17,7 @@ class PintWrapper:
     Unit = None
     ureg = None
     UndefinedUnitError = None
+    DimensionalityError = None
 
     def __init__(self):
         if not self.pint_loaded:
@@ -25,7 +26,7 @@ class PintWrapper:
     @classmethod
     def setup(cls):
         try:
-            from pint import Quantity, UndefinedUnitError, UnitRegistry  # noqa
+            from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry  # noqa
             from pint.util import string_preprocessor  # noqa
         except ImportError:
             cls.pint_loaded = False
@@ -40,6 +41,7 @@ class PintWrapper:
         cls.GeneralQuantity = Quantity
         cls.ureg.define("unit = [] = dimensionless")
         cls.UndefinedUnitError = UndefinedUnitError
+        cls.DimensionalityError = DimensionalityError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
         import re
 
