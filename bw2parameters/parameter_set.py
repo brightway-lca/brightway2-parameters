@@ -278,6 +278,26 @@ class PintParameterSet(DefaultParameterSet):
         refs.update({key: set() for key in self.global_params})
         return refs
 
+    def evaluate(self):
+        """Evaluate each formula. Returns dictionary of parameter names and values."""
+        result = {}
+        for key in self.order:
+            if key in self.global_params:
+                value = self.global_params[key]
+            elif self.params[key].get("formula"):
+                value = self.interpreter(self.params[key]["formula"])
+            elif "amount" in self.params[key]:
+                value = self.params[key]["amount"]
+                value = PintWrapper.to_quantity(value, self.params[key].get("unit"))  # add unit if given
+            else:
+                raise ValueError(
+                    "No suitable formula or static amount found "
+                    "in {}".format(key)
+                )
+            result[key] = value
+            self.interpreter.add_symbols({key: value})
+        return result
+
     def evaluate_and_set_amount_field(self):
         """
         Evaluate each formula. Updates the ``amount`` field of each parameter. Also updates the ``unit`` field
