@@ -189,7 +189,7 @@ class PintInterpreter(DefaultInterpreter):
         return PintWrapper.is_quantity_from_same_registry(value)
 
     @classmethod
-    def get_dimensionality(cls, unit_name=None):
+    def get_unit_dimensionality(cls, unit_name=None):
         return PintWrapper.get_dimensionality(unit_name)
 
     def add_symbols(self, symbols):
