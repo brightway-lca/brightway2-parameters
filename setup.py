@@ -14,10 +14,8 @@ setup(
         "astunparse",
         "numpy",
         "stats_arrays",
+        "pint",
     ],
-    extras_require={
-        "pint": ["pint"],
-    },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     classifiers=[
