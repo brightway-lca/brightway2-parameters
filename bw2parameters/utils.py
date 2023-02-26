@@ -1,19 +1,12 @@
 import ast
 
-try:
-    # Python 2
-    string_type = basestring
-except NameError:
-    # Python 3
-    string_type = str
-
 
 def isidentifier(ident):
     """Determines, if string is valid Python identifier.
 
     Stolen from http://stackoverflow.com/questions/12700893/how-to-check-if-a-string-is-a-valid-python-identifier-including-keyword-check"""
 
-    if not isinstance(ident, string_type):
+    if not isinstance(ident, str):
         raise TypeError("expected str, but got {!r}".format(type(ident)))
 
     # Resulting AST of simple identifier is <Module [<Expr <Name "foo">>]>
