@@ -1,10 +1,7 @@
-def check_pint_installed():
-    try:
-        import pint
-
-        return True
-    except ImportError:
-        return False
+from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry
+from pint.util import string_preprocessor
+import pint.util
+import re
 
 
 class PintWrapper:
@@ -20,20 +17,10 @@ class PintWrapper:
     DimensionalityError = None
 
     def __init__(self):
-        if not self.pint_loaded:
-            self.setup()
+        self.setup()
 
     @classmethod
     def setup(cls):
-        try:
-            from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry  # noqa
-            from pint.util import string_preprocessor  # noqa
-        except ImportError:
-            cls.pint_loaded = False
-            raise ImportError(
-                "Module pint could not be loaded. Please install pint: `pip install pint`."
-            )
-        cls.pint_loaded = True
         cls.string_preprocessor = string_preprocessor
         cls.ureg = UnitRegistry()
         cls.Quantity = cls.ureg.Quantity
@@ -43,9 +30,6 @@ class PintWrapper:
         cls.UndefinedUnitError = UndefinedUnitError
         cls.DimensionalityError = DimensionalityError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-        import re
-
-        import pint.util  # noqa
 
         pint.util._subs_re_list[-1] = (  # noqa
             r"([\w\.\)])\s+(?=[\w\(])",
