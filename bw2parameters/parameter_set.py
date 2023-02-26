@@ -110,7 +110,7 @@ class DefaultParameterSet(object):
                 )
             elif not (
                 self.interpreter.is_numeric(value.get("amount"))
-                or isstr(value.get("formula"))
+                or isinstance(value.get("formula"), str)
             ):
                 raise ValueError(
                     (

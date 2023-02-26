@@ -24,7 +24,3 @@ def isidentifier(ident):
     ):
         return False
     return True
-
-
-def isstr(s):
-    return isinstance(s, string_type)
