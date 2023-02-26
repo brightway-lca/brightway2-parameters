@@ -2,18 +2,22 @@ from setuptools import setup
 
 setup(
     name="bw2parameters",
-    version="0.7.1",
+    version="1.0.0",
     packages=["bw2parameters"],
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
-    license=open("LICENSE").read(),
+    license=open("LICENSE").read()[:200],
     url="https://github.com/brightway-lca/brightway2-parameters",
+    python_requires='>=3.3',
     install_requires=[
         "asteval",
         "astunparse",
         "numpy",
         "stats_arrays",
     ],
+    extras_require={
+        "pint": ["pint"],
+    },
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
     classifiers=[
@@ -24,10 +28,14 @@ setup(
         "Operating System :: Microsoft :: Windows",
         "Operating System :: POSIX",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 2.7",
         "Programming Language :: Python :: 3.3",
         "Programming Language :: Python :: 3.4",
         "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )

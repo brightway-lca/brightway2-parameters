@@ -69,4 +69,24 @@ Note the following:
 * Formulas should not include the equals sign; instead of ``{'formula': 'a = b + c', 'name': 'a'}`` do ``{'formula': 'b + c', 'name': 'a'}``.
 * Formulas can only reference defined variables.
 
+**New as of version 0.8:**
+
+You can evaluate formulas with units in them. In order for this to work, you need to install the optional dependency `pint <https://github.com/hgrecco/pint>`__. To do so, type ``pip install bw2parameters[pint]`` into your terminal. Example usage:
+
+.. code-block:: python
+
+    In [12]: from bw2parameters import PintParameterSet
+    In [13]: ps = PintParameterSet({
+   ...:         'A': {'formula': '1 m'},
+   ...:         'B': {'formula': 'A + 200 mm'},
+   ...:         'C': {'formula': 'B * kg/m'},
+   ...:         'D': {'formula': 'A * B * C'},
+   ...:     })
+    In [14]: ps.evaluate()
+    Out[4]:
+    {'A': 1 <Unit('meter')>,
+    'B': 1.2 <Unit('meter')>,
+    'C': 1.2 <Unit('kilogram')>,
+    'D': 1.44 <Unit('kilogram * meter ** 2')>}
+
 Brightway2-parameters is Python 2.7 & 3.3+ compatible, has 100% test coverage, and is 2-clause BSD licensed and free. Source code `on Github <https://github.com/brightway-lca/brightway2-parameters>`__.
