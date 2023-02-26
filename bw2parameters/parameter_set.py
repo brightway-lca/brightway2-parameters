@@ -7,8 +7,7 @@ from stats_arrays import uncertainty_choices
 
 from .errors import *
 from .interpreter import PintInterpreter, DefaultInterpreter
-from .utils import isidentifier, isstr
-from .config import config
+from .utils import isidentifier
 from .pint import PintWrapper
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
@@ -19,12 +18,8 @@ Returned shape: {}"""
 
 
 class ParameterSetChooser:
-
     def __new__(cls, *args, **kwargs):
-        if config.use_pint and PintWrapper.pint_installed:
-            return PintParameterSet(*args, **kwargs)
-        else:
-            return DefaultParameterSet(*args, **kwargs)
+        return PintParameterSet(*args, **kwargs)
 
 
 class DefaultParameterSet(object):
