@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 
 base_path = Path(__file__).parent
 
@@ -62,6 +63,12 @@ class PintWrapper:
             (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
             for a, b in pint.util._subs_re_list  # noqa
         ]
+        # additional fix to make sure ecoinvent-specific units "kilometer-year", "meter-year", "square meter-year"
+        # can be processed (otherwise minus is interpreted as literal subtraction operator)
+        cls.ureg.preprocessors.append(
+            lambda x: x.replace("meter-year", "meter * year")
+        )
+        pint.util._subs_re = [(re.compile("meter-year"), "meter * year")] + pint.util._subs_re
 
     @classmethod
     def to_unit(cls, string, raise_errors=False):
