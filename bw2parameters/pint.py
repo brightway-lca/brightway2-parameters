@@ -107,12 +107,15 @@ class PintWrapper:
 
     @classmethod
     def get_dimensionality(cls, unit_name=None):
+        """
+        Returns the dimensionality of the unit described by `unit_name`, e.g. {["mass"]: 1} for "kg" or
+        {["length"]: 1, ["time"]: -1} for "m/s". Also makes sure the dimensions are sorted alphabetically.
+        """
         if unit_name is None:
             return None
         else:
-            return dict(
-                **cls.to_unit(unit_name, raise_errors=True).dimensionality
-            )
+            d = cls.to_unit(unit_name, raise_errors=True).dimensionality
+            return {k: d[k] for k in sorted(d.keys())}
 
     @classmethod
     def to_quantity(cls, amount, unit=None):
