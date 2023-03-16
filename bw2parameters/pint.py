@@ -1,3 +1,8 @@
+from pathlib import Path
+
+base_path = Path(__file__).parent
+
+
 def check_pint_installed():
     try:
         import pint
@@ -10,6 +15,8 @@ def check_pint_installed():
 class PintWrapper:
     pint_installed = check_pint_installed()
     pint_loaded = False
+
+    custom_unit_def = base_path / "ecoinvent_units.txt"
 
     string_preprocessor = None
     Quantity = None
@@ -24,7 +31,7 @@ class PintWrapper:
             self.setup()
 
     @classmethod
-    def setup(cls):
+    def setup(cls, custom_unit_def=None):
         try:
             from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry  # noqa
             from pint.util import string_preprocessor  # noqa
@@ -39,7 +46,7 @@ class PintWrapper:
         cls.Quantity = cls.ureg.Quantity
         cls.Unit = cls.ureg.Unit
         cls.GeneralQuantity = Quantity
-        cls.ureg.define("unit = [] = dimensionless")
+        cls.ureg.load_definitions(custom_unit_def or cls.custom_unit_def)
         cls.UndefinedUnitError = UndefinedUnitError
         cls.DimensionalityError = DimensionalityError
         # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)

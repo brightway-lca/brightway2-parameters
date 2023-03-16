@@ -1,0 +1,7 @@
+# default "ton" is interpreted as "short ton" (2000 pounds)
+ton = 1000 kg
+
+# ecoinvent specific stuff
+unit = [unit]
+person = [person] = _ = guest
+night = [time]
