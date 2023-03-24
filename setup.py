@@ -4,6 +4,7 @@ setup(
     name="bw2parameters",
     version="1.0.0",
     packages=["bw2parameters"],
+    package_data={'bw2parameters': ['ecoinvent_units.txt']},
     author="Chris Mutel",
     author_email="cmutel@gmail.com",
     license=open("LICENSE").read()[:200],
