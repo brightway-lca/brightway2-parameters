@@ -5,6 +5,10 @@ ton = 1000 kg
 unit = [unit]
 person = [person] = _ = guest
 night = [time]
+EUR2005 = [currency]
+kilo = 1000
+Becquerel = becquerel
+Sm3 = [Sm3]
 
 # other useful definitions (feel free to add more)
 percent = 1/100 = _ = pct
