@@ -13,3 +13,5 @@ Sm3 = [Sm3]
 # other useful definitions (feel free to add more)
 percent = 1/100 = _ = pct
 ppm = 1/1e6
+m2 = m**2
+m3 = m**3
