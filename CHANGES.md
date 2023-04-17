@@ -1,5 +1,11 @@
 # parameters Changelog
 
+## 1.1.0 (2023-04-17)
+
+- Require `pint` dependency
+- Fix regression: `DefaultParameterSet` -> `ParameterSet`
+- New packaging based on Brightway
+
 ## 1.0.0 (2023-01-27)
 
 - BREAKING CHANGE: Dropping Python 2.7 support

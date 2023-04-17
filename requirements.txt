@@ -1,5 +1,0 @@
-asteval
-astunparse
-numpy
-stats_arrays
-pint

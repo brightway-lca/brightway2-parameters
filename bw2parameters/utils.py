@@ -1,4 +1,6 @@
+from typing import Union
 import ast
+import importlib.metadata
 
 
 def isidentifier(ident):
@@ -24,3 +26,18 @@ def isidentifier(ident):
     ):
         return False
     return True
+
+
+def get_version_tuple() -> tuple:
+    def as_integer(x: str) -> Union[int, str]:
+        try:
+            return int(x)
+        except ValueError:
+            return x
+
+    return tuple(
+        as_integer(v)
+        for v in importlib.metadata.version("bw2parameters")
+        .strip()
+        .split(".")
+    )
