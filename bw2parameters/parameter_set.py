@@ -6,9 +6,9 @@ import numpy as np
 from stats_arrays import uncertainty_choices
 
 from .errors import *
-from .interpreter import PintInterpreter, Interpreter
-from .utils import isidentifier
+from .interpreter import Interpreter, PintInterpreter
 from .pint import PintWrapper
+from .utils import isidentifier
 
 MC_ERROR_TEXT = """Formula returned array of wrong shape:
 Name: {}
@@ -95,9 +95,7 @@ class ParameterSet(object):
             raise ValueError("Global parameters are not a dictionary")
         for key, value in self.params.items():
             if not isinstance(value, dict):
-                raise ValueError(
-                    "Parameter value {} is not a dictionary".format(key)
-                )
+                raise ValueError("Parameter value {} is not a dictionary".format(key))
             elif not (
                 self.interpreter.is_numeric(value.get("amount"))
                 or isinstance(value.get("formula"), str)
@@ -119,15 +117,13 @@ class ParameterSet(object):
         for key, value in self.global_params.items():
             if not self.interpreter.is_numeric(value):
                 raise ValueError(
-                    (
-                        "Global parameter {} does not have a "
-                        "numeric value: {}"
-                    ).format(key, value)
+                    ("Global parameter {} does not have a " "numeric value: {}").format(
+                        key, value
+                    )
                 )
             elif not isidentifier(key):
                 raise ValueError(
-                    "Global parameter label {} not a valid "
-                    "Python name".format(key)
+                    "Global parameter label {} not a valid " "Python name".format(key)
                 )
 
     def evaluate(self):
@@ -143,8 +139,7 @@ class ParameterSet(object):
                 value = self.params[key]["amount"]
             else:
                 raise ValueError(
-                    "No suitable formula or static amount found "
-                    "in {}".format(key)
+                    "No suitable formula or static amount found " "in {}".format(key)
                 )
             result[key] = value
             self.interpreter.add_symbols({key: value})
@@ -178,9 +173,7 @@ class ParameterSet(object):
                     obj["uncertainty_type"] = obj["uncertainty type"]
                 obj["loc"] = obj.get("loc") or obj["amount"]
             kls = uncertainty_choices[obj["uncertainty_type"]]
-            return kls.bounded_random_variables(
-                kls.from_dicts(obj), iterations
-            ).ravel()
+            return kls.bounded_random_variables(kls.from_dicts(obj), iterations).ravel()
 
         def fix_shape(array):
             if array is None:
@@ -251,7 +244,9 @@ class ParameterSet(object):
 class PintParameterSet(ParameterSet):
     def __init__(self, params, global_params=None, interpreter=None):
         super().__init__(
-            params=params, global_params=global_params, interpreter=interpreter or PintInterpreter()
+            params=params,
+            global_params=global_params,
+            interpreter=interpreter or PintInterpreter(),
         )
 
     def get_references(self):
@@ -276,11 +271,12 @@ class PintParameterSet(ParameterSet):
                 value = self.interpreter(self.params[key]["formula"])
             elif "amount" in self.params[key]:
                 value = self.params[key]["amount"]
-                value = PintWrapper.to_quantity(value, self.params[key].get("unit"))  # add unit if given
+                value = PintWrapper.to_quantity(
+                    value, self.params[key].get("unit")
+                )  # add unit if given
             else:
                 raise ValueError(
-                    "No suitable formula or static amount found "
-                    "in {}".format(key)
+                    "No suitable formula or static amount found " "in {}".format(key)
                 )
             result[key] = value
             self.interpreter.add_symbols({key: value})

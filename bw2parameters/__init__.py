@@ -1,6 +1,6 @@
 __version__ = "1.0.0"
 
-from .pint import PintWrapper
+from .errors import MissingName
 from .interpreter import Interpreter, PintInterpreter
 from .mangling import (
     FormulaSubstitutor,
@@ -9,4 +9,4 @@ from .mangling import (
     substitute_in_formulas,
 )
 from .parameter_set import ParameterSet, PintParameterSet
-from .errors import MissingName
+from .pint import PintWrapper

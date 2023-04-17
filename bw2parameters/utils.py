@@ -16,11 +16,11 @@ def isidentifier(ident):
         return False
 
     if (
-            not isinstance(root, ast.Module)
-            or len(root.body) != 1
-            or not isinstance(root.body[0], ast.Expr)
-            or not isinstance(root.body[0].value, ast.Name)
-            or root.body[0].value.id != ident
+        not isinstance(root, ast.Module)
+        or len(root.body) != 1
+        or not isinstance(root.body[0], ast.Expr)
+        or not isinstance(root.body[0].value, ast.Name)
+        or root.body[0].value.id != ident
     ):
         return False
     return True

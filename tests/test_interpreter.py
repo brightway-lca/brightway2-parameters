@@ -14,22 +14,29 @@ def test_add_symbols():
     i.add_symbols({"a": 1, "b": 2})
     assert i.user_defined_symbols() == {"a", "b"}
 
+
 def test_get_symbols():
     i = Interpreter()
-    assert {'a', 'b', 'c'} == i.get_symbols('a * b + c')
-    assert {'a', 'b', 'c', 'sqrt', 'log'} == i.get_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
+    assert {"a", "b", "c"} == i.get_symbols("a * b + c")
+    assert {"a", "b", "c", "sqrt", "log"} == i.get_symbols(
+        "a * 4 + 2.4 + sqrt(b) + log(a * c)"
+    )
     assert set() == i.get_symbols(None)
+
 
 def test_get_unknown_symbols():
     i = Interpreter()
-    assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * b + c')
-    assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
-    assert {'a', 'b', 'c', 'sqrt', 'log'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)',
-                                                                   ignore_symtable=True)
-    assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c'})
-    assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols={'c': 1})
-    assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=['c'])
-    assert {'a', 'b'} == i.get_unknown_symbols('a * b + c', known_symbols=('c',))
+    assert {"a", "b", "c"} == i.get_unknown_symbols("a * b + c")
+    assert {"a", "b", "c"} == i.get_unknown_symbols(
+        "a * 4 + 2.4 + sqrt(b) + log(a * c)"
+    )
+    assert {"a", "b", "c", "sqrt", "log"} == i.get_unknown_symbols(
+        "a * 4 + 2.4 + sqrt(b) + log(a * c)", ignore_symtable=True
+    )
+    assert {"a", "b"} == i.get_unknown_symbols("a * b + c", known_symbols={"c"})
+    assert {"a", "b"} == i.get_unknown_symbols("a * b + c", known_symbols={"c": 1})
+    assert {"a", "b"} == i.get_unknown_symbols("a * b + c", known_symbols=["c"])
+    assert {"a", "b"} == i.get_unknown_symbols("a * b + c", known_symbols=("c",))
     assert set() == i.get_unknown_symbols(None)
 
     # assert {'a', 'b', 'c'} == i.get_unknown_symbols('a * b + c', **kwargs)

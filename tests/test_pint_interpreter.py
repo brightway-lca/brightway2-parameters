@@ -3,7 +3,6 @@ import pytest
 
 from bw2parameters import PintInterpreter, PintWrapper
 
-
 ureg = PintWrapper.ureg
 other_ureg = pint.UnitRegistry()
 UndefinedUnitError = PintWrapper.UndefinedUnitError
@@ -23,16 +22,20 @@ def test_parse():
 
 def test_get_unknown_symbols():
     i = PintInterpreter()
-    assert set() == i.get_unknown_symbols('a * b + c')  # a: year, b: barn, c: light year
-    assert set() == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)')
-    assert {'sqrt', 'log'} == i.get_unknown_symbols('a * 4 + 2.4 + sqrt(b) + log(a * c)', ignore_symtable=True)
-    assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols={'n'})
-    assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols={'n': 1})
-    assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=['n'])
-    assert {"f", "i"} == i.get_unknown_symbols('f * i + n', known_symbols=('n',))
+    assert set() == i.get_unknown_symbols(
+        "a * b + c"
+    )  # a: year, b: barn, c: light year
+    assert set() == i.get_unknown_symbols("a * 4 + 2.4 + sqrt(b) + log(a * c)")
+    assert {"sqrt", "log"} == i.get_unknown_symbols(
+        "a * 4 + 2.4 + sqrt(b) + log(a * c)", ignore_symtable=True
+    )
+    assert {"f", "i"} == i.get_unknown_symbols("f * i + n", known_symbols={"n"})
+    assert {"f", "i"} == i.get_unknown_symbols("f * i + n", known_symbols={"n": 1})
+    assert {"f", "i"} == i.get_unknown_symbols("f * i + n", known_symbols=["n"])
+    assert {"f", "i"} == i.get_unknown_symbols("f * i + n", known_symbols=("n",))
     assert set() == i.get_unknown_symbols(None)
-    assert set() == i.get_unknown_symbols('kg * m + 2')
-    assert {'kg'} == i.get_unknown_symbols('kg * m + 2', no_pint_units={'kg'})
+    assert set() == i.get_unknown_symbols("kg * m + 2")
+    assert {"kg"} == i.get_unknown_symbols("kg * m + 2", no_pint_units={"kg"})
 
 
 def test_get_pint_symbols():
@@ -127,15 +130,11 @@ def test_parameter_list_to_dict():
         "parameter_9": 2,
         "parameter_10": 5,
     }
-    result = PintInterpreter.parameter_list_to_dict(
-        param_list=param_list
-    )
+    result = PintInterpreter.parameter_list_to_dict(param_list=param_list)
     assert result == expected
     # no amount raises error
     with pytest.raises(KeyError):
-        i.parameter_list_to_dict(
-            [{"name": "parameter_1", "formula": "2 kg"}]
-        )
+        i.parameter_list_to_dict([{"name": "parameter_1", "formula": "2 kg"}])
 
 
 def test_pint_errors_properly_raised():

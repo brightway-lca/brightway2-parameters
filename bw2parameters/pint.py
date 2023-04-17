@@ -1,12 +1,13 @@
-from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry
-from pint.util import string_preprocessor
-import pint.util
 import re
 
+import pint.util
+from pint import DimensionalityError, Quantity, UndefinedUnitError, UnitRegistry
+from pint.util import string_preprocessor
 
-class PintWrapperSingleton():
+
+class PintWrapperSingleton:
     def __new__(cls):
-        if not hasattr(cls, 'instance'):
+        if not hasattr(cls, "instance"):
             cls.instance = super(PintWrapperSingleton, cls).__new__(cls)
         return cls.instance
 
@@ -66,9 +67,7 @@ class PintWrapperSingleton():
         if unit_name is None:
             return None
         else:
-            return dict(
-                **self.to_unit(unit_name, raise_errors=True).dimensionality
-            )
+            return dict(**self.to_unit(unit_name, raise_errors=True).dimensionality)
 
     def to_quantity(self, amount, unit=None):
         """Return a pint.Quantity if a unit is given, otherwise the amount."""
