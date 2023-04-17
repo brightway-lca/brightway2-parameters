@@ -1,37 +1,29 @@
-import pytest
-from bw2parameters import PintWrapper
-
-pytest.importorskip(modname="pint")
+from bw2parameters.pint import PintWrapper, PintWrapperSingleton
 
 
-@pytest.fixture
-def init():
-    PintWrapper()
-
-
-def test_pint_setup(init):
+def test_pint_setup():
     # ensure that setup worked
     assert PintWrapper.ureg is not None
     # ensure that setup is only called once per runtime
-    ureg1 = PintWrapper.ureg
-    PintWrapper()
-    ureg2 = PintWrapper.ureg
+    ureg1 = PintWrapperSingleton().ureg
+    ureg2 = PintWrapperSingleton().ureg
     assert ureg1 == ureg2
+    assert ureg1 == PintWrapper.ureg
 
 
-def test_pint_is_class_variable(init):
+def test_pint_is_class_variable():
     """ensure that pint stays available during whole runtime"""
     assert PintWrapper.ureg is not None
 
 
-def test_custom_unit_definitions(init):
+def test_custom_unit_definitions():
     """Ensure custom unit "unit" is defined"""
     assert PintWrapper.ureg("1 unit") == PintWrapper.Quantity(
         value=1, units="dimensionless"
     )
 
 
-def test_different_unit_registries(init):
+def test_different_unit_registries():
     """Test that quantities from different unit registries are identified correctly."""
     q1 = PintWrapper.ureg("1 kg")
     q2 = PintWrapper.Quantity(value=1, units="kg")

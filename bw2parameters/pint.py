@@ -4,57 +4,46 @@ import pint.util
 import re
 
 
-class PintWrapper:
-    pint_installed = check_pint_installed()
-    pint_loaded = False
-
-    string_preprocessor = None
-    Quantity = None
-    GeneralQuantity = None
-    Unit = None
-    ureg = None
-    UndefinedUnitError = None
-    DimensionalityError = None
+class PintWrapperSingleton():
+    def __new__(cls):
+        if not hasattr(cls, 'instance'):
+            cls.instance = super(PintWrapperSingleton, cls).__new__(cls)
+        return cls.instance
 
     def __init__(self):
-        self.setup()
+        if not hasattr(self, "string_preprocessor"):
+            self.string_preprocessor = string_preprocessor
+            self.ureg = UnitRegistry()
+            self.Quantity = self.ureg.Quantity
+            self.Unit = self.ureg.Unit
+            self.GeneralQuantity = Quantity
+            self.ureg.define("unit = [] = dimensionless")
+            self.UndefinedUnitError = UndefinedUnitError
+            self.DimensionalityError = DimensionalityError
+            # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
 
-    @classmethod
-    def setup(cls):
-        cls.string_preprocessor = string_preprocessor
-        cls.ureg = UnitRegistry()
-        cls.Quantity = cls.ureg.Quantity
-        cls.Unit = cls.ureg.Unit
-        cls.GeneralQuantity = Quantity
-        cls.ureg.define("unit = [] = dimensionless")
-        cls.UndefinedUnitError = UndefinedUnitError
-        cls.DimensionalityError = DimensionalityError
-        # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
+            pint.util._subs_re_list[-1] = (  # noqa
+                r"([\w\.\)])\s+(?=[\w\(])",
+                r"\1*",
+            )
+            pint.util._subs_re = [
+                (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
+                for a, b in pint.util._subs_re_list  # noqa
+            ]
 
-        pint.util._subs_re_list[-1] = (  # noqa
-            r"([\w\.\)])\s+(?=[\w\(])",
-            r"\1*",
-        )
-        pint.util._subs_re = [
-            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
-            for a, b in pint.util._subs_re_list  # noqa
-        ]
-
-    @classmethod
-    def to_unit(cls, string, raise_errors=False):
+    def to_unit(self, string, raise_errors=False):
         """Returns pint.Unit if the given string can be interpreted as a unit, returns None otherwise"""
         if string is None:
             return None
         try:
-            return cls.Unit(string)
-        except cls.UndefinedUnitError:
+            return self.Unit(string)
+        except self.UndefinedUnitError:
             if raise_errors:
-                raise cls.UndefinedUnitError
+                raise self.UndefinedUnitError
             else:
                 return None
 
-    @classmethod
-    def to_units(cls, iterable, raise_errors=False, drop_none=True):
+    def to_units(self, iterable, raise_errors=False, drop_none=True):
         """
         Takes and iterable and tries to interpret each element as a pint.Unit. Returns a dict where key is
         the original element and value is the interpreted pint.Unit. Elements which cannot be interpreted as
@@ -62,32 +51,31 @@ class PintWrapper:
         """
         units = {}
         for s in iterable:
-            unit = cls.to_unit(s, raise_errors=raise_errors)
+            unit = self.to_unit(s, raise_errors=raise_errors)
             if unit or not drop_none:
                 units[s] = unit
         return units
 
-    @classmethod
-    def is_quantity(cls, value):
-        return isinstance(value, cls.GeneralQuantity)
+    def is_quantity(self, value):
+        return isinstance(value, self.GeneralQuantity)
 
-    @classmethod
-    def is_quantity_from_same_registry(cls, value):
-        return isinstance(value, cls.Quantity)
+    def is_quantity_from_same_registry(self, value):
+        return isinstance(value, self.Quantity)
 
-    @classmethod
-    def get_dimensionality(cls, unit_name=None):
+    def get_dimensionality(self, unit_name=None):
         if unit_name is None:
             return None
         else:
             return dict(
-                **cls.to_unit(unit_name, raise_errors=True).dimensionality
+                **self.to_unit(unit_name, raise_errors=True).dimensionality
             )
 
-    @classmethod
-    def to_quantity(cls, amount, unit=None):
+    def to_quantity(self, amount, unit=None):
         """Return a pint.Quantity if a unit is given, otherwise the amount."""
         if unit is None:
             return amount
         else:
-            return cls.Quantity(value=amount, units=unit)
+            return self.Quantity(value=amount, units=unit)
+
+
+PintWrapper = PintWrapperSingleton()

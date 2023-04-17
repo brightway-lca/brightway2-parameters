@@ -1,24 +1,14 @@
 from collections.abc import Iterable
 
-from asteval import Interpreter as ASTInterpreter  # asteval not in requirements # noqa
-from asteval import NameFinder  # asteval not in requirements # noqa
+from asteval import Interpreter as ASTInterpreter
+from asteval import NameFinder
 from .pint import PintWrapper
-from .config import config
 from .errors import MissingName
 import numpy as np
 from numbers import Number
 
 
-class InterpreterChooser:
-
-    def __new__(cls, *args, **kwargs):
-        if config.use_pint and PintWrapper.pint_installed:
-            return PintInterpreter(*args, **kwargs)
-        else:
-            return DefaultInterpreter(*args, **kwargs)
-
-
-class DefaultInterpreter(ASTInterpreter):
+class Interpreter(ASTInterpreter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.BUILTIN_SYMBOLS = set(self.symtable)
@@ -32,12 +22,7 @@ class DefaultInterpreter(ASTInterpreter):
             try:
                 return func(self, expr, *args, **kwargs)
             except (NameError, SyntaxError):
-                if isinstance(self, PintInterpreter):
-                    raise MissingName(expr)
-                elif config.use_pint is False:
-                    raise MissingName("One or more symbols could not be interpreted. Please check the formula. If it "
-                                      "contains units, please set `bw2parameters.config.use_pint = True`: "
-                                      f"{expr}") from None
+                raise MissingName(expr)
 
         return wrapper
 
@@ -123,12 +108,9 @@ class DefaultInterpreter(ASTInterpreter):
         obj["amount"] = quantity
 
 
-class PintInterpreter(DefaultInterpreter):
-
+class PintInterpreter(Interpreter):
     def __init__(self, *args, units=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if not PintWrapper.pint_loaded:
-            PintWrapper()
         if units is not None:
             self.add_symbols(PintWrapper.to_units(units, raise_errors=True))
 

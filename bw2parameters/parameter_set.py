@@ -6,7 +6,7 @@ import numpy as np
 from stats_arrays import uncertainty_choices
 
 from .errors import *
-from .interpreter import PintInterpreter, DefaultInterpreter
+from .interpreter import PintInterpreter, Interpreter
 from .utils import isidentifier
 from .pint import PintWrapper
 
@@ -17,16 +17,11 @@ Expected shape: {}
 Returned shape: {}"""
 
 
-class ParameterSetChooser:
-    def __new__(cls, *args, **kwargs):
-        return PintParameterSet(*args, **kwargs)
-
-
-class DefaultParameterSet(object):
+class ParameterSet(object):
     def __init__(self, params, global_params=None, interpreter=None):
         self.params = params
         self.global_params = global_params or {}
-        self.interpreter = interpreter or DefaultInterpreter()
+        self.interpreter = interpreter or Interpreter()
         self.basic_validation()
         self.all_param_names = set(self.params).union(set(self.global_params))
         self.references = self.get_references()
@@ -253,12 +248,10 @@ class DefaultParameterSet(object):
         return interpreter
 
 
-class PintParameterSet(DefaultParameterSet):
+class PintParameterSet(ParameterSet):
     def __init__(self, params, global_params=None, interpreter=None):
-        if interpreter is None:
-            interpreter = PintInterpreter()
         super().__init__(
-            params=params, global_params=global_params, interpreter=interpreter
+            params=params, global_params=global_params, interpreter=interpreter or PintInterpreter()
         )
 
     def get_references(self):
