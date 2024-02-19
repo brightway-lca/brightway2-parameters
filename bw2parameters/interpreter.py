@@ -1,24 +1,15 @@
 from collections.abc import Iterable
-
-from asteval import Interpreter as ASTInterpreter  # asteval not in requirements # noqa
-from asteval import NameFinder  # asteval not in requirements # noqa
-from .pint import PintWrapper
-from .config import config
-from .errors import MissingName
-import numpy as np
 from numbers import Number
 
+import numpy as np
+from asteval import Interpreter as ASTInterpreter
+from asteval import NameFinder
 
-class InterpreterChooser:
-
-    def __new__(cls, *args, **kwargs):
-        if config.use_pint and PintWrapper.pint_installed:
-            return PintInterpreter(*args, **kwargs)
-        else:
-            return DefaultInterpreter(*args, **kwargs)
+from .errors import MissingName
+from .pint import PintWrapper
 
 
-class DefaultInterpreter(ASTInterpreter):
+class Interpreter(ASTInterpreter):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.BUILTIN_SYMBOLS = set(self.symtable)
@@ -32,12 +23,7 @@ class DefaultInterpreter(ASTInterpreter):
             try:
                 return func(self, expr, *args, **kwargs)
             except (NameError, SyntaxError):
-                if isinstance(self, PintInterpreter):
-                    raise MissingName(expr)
-                elif config.use_pint is False:
-                    raise MissingName("One or more symbols could not be interpreted. Please check the formula. If it "
-                                      "contains units, please set `bw2parameters.config.use_pint = True`: "
-                                      f"{expr}") from None
+                raise MissingName(expr)
 
         return wrapper
 
@@ -53,7 +39,11 @@ class DefaultInterpreter(ASTInterpreter):
         return set(nf.names)
 
     def get_unknown_symbols(
-        self, text, known_symbols=None, ignore_symtable=False, no_pint_units=None,
+        self,
+        text,
+        known_symbols=None,
+        ignore_symtable=False,
+        no_pint_units=None,
     ):
         """
         Parses an expression and returns all symbols which are neither in the symtable nor passed via known_symbols.
@@ -92,13 +82,9 @@ class DefaultInterpreter(ASTInterpreter):
         return set(self.symtable).difference(self.BUILTIN_SYMBOLS)
 
     @_raise_missing_name
-    def eval(
-        self, expr, *args, known_symbols=None, raise_errors=True, **kwargs
-    ):
+    def eval(self, expr, *args, known_symbols=None, raise_errors=True, **kwargs):
         self.add_symbols(known_symbols)
-        result = super().eval(
-            expr=expr, *args, raise_errors=raise_errors, **kwargs
-        )
+        result = super().eval(expr=expr, *args, raise_errors=raise_errors, **kwargs)
         self.remove_symbols(known_symbols)
         return result
 
@@ -115,7 +101,9 @@ class DefaultInterpreter(ASTInterpreter):
         return False
 
     @classmethod
-    def get_unit_dimensionality(cls, unit_name=None):  # signature must be same for Interpreter and PintInterpreter # noqa
+    def get_unit_dimensionality(
+        cls, unit_name=None
+    ):  # signature must be same for Interpreter and PintInterpreter # noqa
         return dict()
 
     @classmethod
@@ -123,18 +111,17 @@ class DefaultInterpreter(ASTInterpreter):
         obj["amount"] = quantity
 
 
-class PintInterpreter(DefaultInterpreter):
-
+class PintInterpreter(Interpreter):
     def __init__(self, *args, units=None, **kwargs):
         super().__init__(*args, **kwargs)
-        if not PintWrapper.pint_loaded:
-            PintWrapper()
         if units is not None:
             self.add_symbols(PintWrapper.to_units(units, raise_errors=True))
 
     @classmethod
     def is_numeric(cls, value):
-        return super().is_numeric(value) or isinstance(value, PintWrapper.GeneralQuantity)
+        return super().is_numeric(value) or isinstance(
+            value, PintWrapper.GeneralQuantity
+        )
 
     def parse(self, text):
         return super().parse(PintWrapper.string_preprocessor(text))
@@ -157,7 +144,9 @@ class PintInterpreter(DefaultInterpreter):
 
         # exclude symbols which can be parsed as pint units and are not in `no_pint_units`
         if not include_pint_units:
-            pint_units = PintWrapper.to_units(unknown_symbols, raise_errors=False, drop_none=True)
+            pint_units = PintWrapper.to_units(
+                unknown_symbols, raise_errors=False, drop_none=True
+            )
             # exclude explicitly defined symbols
             pint_units = set(pint_units).difference(no_pint_units or set())
             unknown_symbols = unknown_symbols.difference(pint_units)
@@ -177,7 +166,9 @@ class PintInterpreter(DefaultInterpreter):
             ignore_symtable=ignore_symtable,
         )
         # filter those which can be interpreted as a pint.Unit
-        pint_symbols = PintWrapper.to_units(unknown_symbols, raise_errors=False, drop_none=True)
+        pint_symbols = PintWrapper.to_units(
+            unknown_symbols, raise_errors=False, drop_none=True
+        )
         return pint_symbols
 
     @classmethod
@@ -201,9 +192,9 @@ class PintInterpreter(DefaultInterpreter):
             return
         for k, v in symbols.items():
             # if value is a quantity from another unit registry -> convert to current unit registry
-            if PintWrapper.is_quantity(v) and not PintWrapper.is_quantity_from_same_registry(
+            if PintWrapper.is_quantity(
                 v
-            ):
+            ) and not PintWrapper.is_quantity_from_same_registry(v):
                 symbols[k] = PintWrapper.Quantity(value=v.m, units=v.u)
         super().add_symbols(symbols=symbols)
 
@@ -215,7 +206,9 @@ class PintInterpreter(DefaultInterpreter):
                 return func(self, expr, *args, **kwargs)  # noqa
             except TypeError:
                 try:
-                    PintWrapper.ureg.parse_expression(expr, **self.symtable)  # will raise proper exception
+                    PintWrapper.ureg.parse_expression(
+                        expr, **self.symtable
+                    )  # will raise proper exception
                 except Exception as error:
                     error.extra_msg = f": {expr}"
                     raise error from None  # omit previous exceptions
@@ -224,7 +217,9 @@ class PintInterpreter(DefaultInterpreter):
 
     @_raise_proper_pint_exception  # noqa
     def eval(self, expr, *args, known_symbols=None, **kwargs):
-        pint_symbols = self.get_pint_symbols(text=expr, known_symbols=known_symbols, ignore_symtable=False)
+        pint_symbols = self.get_pint_symbols(
+            text=expr, known_symbols=known_symbols, ignore_symtable=False
+        )
         self.add_symbols(pint_symbols)
         result = super().eval(expr=expr, known_symbols=known_symbols, *args, **kwargs)
         return result
@@ -237,8 +232,7 @@ class PintInterpreter(DefaultInterpreter):
         """
         return {
             d["name"]: PintWrapper.to_quantity(
-                amount=d["amount"],
-                unit=d.get("unit") or d.get("data", {}).get("unit")
+                amount=d["amount"], unit=d.get("unit") or d.get("data", {}).get("unit")
             )
             for d in param_list
         }
@@ -264,6 +258,8 @@ class PintInterpreter(DefaultInterpreter):
             obj["amount"] = amount
             obj["unit"] = unit
         else:
-            quantity = quantity if is_quantity else PintWrapper.to_quantity(amount, unit)
+            quantity = (
+                quantity if is_quantity else PintWrapper.to_quantity(amount, unit)
+            )
             obj["amount"] = quantity.to(to_unit).m
             obj["unit"] = to_unit

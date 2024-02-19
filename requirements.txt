@@ -1,4 +1,0 @@
-asteval
-astunparse
-numpy
-stats_arrays

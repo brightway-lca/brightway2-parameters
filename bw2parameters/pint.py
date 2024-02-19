@@ -1,90 +1,51 @@
 from pathlib import Path
 import re
+import pint.util
+from pint import DimensionalityError, Quantity, UndefinedUnitError, UnitRegistry
+from pint.util import string_preprocessor
 
-base_path = Path(__file__).parent
-
-
-def check_pint_installed():
-    try:
-        import pint
-
-        return True
-    except ImportError:
-        return False
+UNITS_FILE = Path(__file__).parent / "ecoinvent_units.txt"
 
 
-class PintWrapper:
-    pint_installed = check_pint_installed()
-    pint_loaded = False
+class PintWrapperSingleton:
+    def __new__(cls):
+        if not hasattr(cls, "instance"):
+            cls.instance = super(PintWrapperSingleton, cls).__new__(cls)
+        return cls.instance
 
-    custom_unit_def = base_path / "ecoinvent_units.txt"
-
-    string_preprocessor = None
-    Quantity = None
-    GeneralQuantity = None
-    Unit = None
-    ureg = None
-    UndefinedUnitError = None
-    DimensionalityError = None
-
-    def __init__(self):
-        if not self.pint_loaded:
-            self.setup()
-
-    @classmethod
-    def setup(cls, custom_unit_def=None):
-        try:
-            from pint import Quantity, UndefinedUnitError, DimensionalityError, UnitRegistry  # noqa
-            from pint.util import string_preprocessor  # noqa
-        except ImportError:
-            cls.pint_loaded = False
-            raise ImportError(
-                "Module pint could not be loaded. Please install pint: `pip install pint`."
+    def __init__(self, units_file: Path | str = UNITS_FILE):
+        if not hasattr(self, "string_preprocessor"):
+            self.string_preprocessor = string_preprocessor
+            self.ureg = UnitRegistry()
+            self.Quantity = self.ureg.Quantity
+            self.Unit = self.ureg.Unit
+            self.GeneralQuantity = Quantity
+            self.ureg.load_definitions(units_file)
+            self.UndefinedUnitError = UndefinedUnitError
+            self.DimensionalityError = DimensionalityError
+            # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
+            pint.util._subs_re_list[-1] = (  # noqa
+                r"([\w\.\)])\s+(?=[\w\(])",
+                r"\1*",
             )
-        cls.pint_loaded = True
-        cls.string_preprocessor = string_preprocessor
-        cls.ureg = UnitRegistry()
-        cls.Quantity = cls.ureg.Quantity
-        cls.Unit = cls.ureg.Unit
-        cls.GeneralQuantity = Quantity
-        cls.ureg.load_definitions(custom_unit_def or cls.custom_unit_def)
-        cls.UndefinedUnitError = UndefinedUnitError
-        cls.DimensionalityError = DimensionalityError
-        # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-        import re
+            pint.util._subs_re = [
+                (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
+                for a, b in pint.util._subs_re_list  # noqa
+            ]
 
-        import pint.util  # noqa
-
-        pint.util._subs_re_list[-1] = (  # noqa
-            r"([\w\.\)])\s+(?=[\w\(])",
-            r"\1*",
-        )
-        pint.util._subs_re = [
-            (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
-            for a, b in pint.util._subs_re_list  # noqa
-        ]
-        # additional fix to make sure ecoinvent-specific units "kilometer-year", "meter-year", "square meter-year"
-        # can be processed (otherwise minus is interpreted as literal subtraction operator)
-        cls.ureg.preprocessors.append(
-            lambda x: x.replace("meter-year", "meter * year")
-        )
-        pint.util._subs_re = [(re.compile("meter-year"), "meter * year")] + pint.util._subs_re
-
-    @classmethod
-    def to_unit(cls, string, raise_errors=False):
+    def to_unit(self, string, raise_errors=False):
         """Returns pint.Unit if the given string can be interpreted as a unit, returns None otherwise"""
         if string is None:
             return None
         try:
-            return cls.Unit(string)
-        except cls.UndefinedUnitError:
+            return self.Unit(string)
+        except self.UndefinedUnitError:
             if raise_errors:
-                raise cls.UndefinedUnitError
+                raise self.UndefinedUnitError
             else:
                 return None
 
-    @classmethod
-    def to_units(cls, iterable, raise_errors=False, drop_none=True):
+    def to_units(self, iterable, raise_errors=False, drop_none=True):
         """
         Takes and iterable and tries to interpret each element as a pint.Unit. Returns a dict where key is
         the original element and value is the interpreted pint.Unit. Elements which cannot be interpreted as
@@ -92,18 +53,16 @@ class PintWrapper:
         """
         units = {}
         for s in iterable:
-            unit = cls.to_unit(s, raise_errors=raise_errors)
+            unit = self.to_unit(s, raise_errors=raise_errors)
             if unit or not drop_none:
                 units[s] = unit
         return units
 
-    @classmethod
-    def is_quantity(cls, value):
-        return isinstance(value, cls.GeneralQuantity)
+    def is_quantity(self, value):
+        return isinstance(value, self.GeneralQuantity)
 
-    @classmethod
-    def is_quantity_from_same_registry(cls, value):
-        return isinstance(value, cls.Quantity)
+    def is_quantity_from_same_registry(self, value):
+        return isinstance(value, self.Quantity)
 
     @classmethod
     def get_dimensionality(cls, unit_name=None):
@@ -117,10 +76,12 @@ class PintWrapper:
             d = cls.to_unit(unit_name, raise_errors=True).dimensionality
             return {k: d[k] for k in sorted(d.keys())}
 
-    @classmethod
-    def to_quantity(cls, amount, unit=None):
+    def to_quantity(self, amount, unit=None):
         """Return a pint.Quantity if a unit is given, otherwise the amount."""
         if unit is None:
             return amount
         else:
-            return cls.Quantity(value=amount, units=unit)
+            return self.Quantity(value=amount, units=unit)
+
+
+PintWrapper = PintWrapperSingleton()

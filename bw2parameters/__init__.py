@@ -1,15 +1,28 @@
-__version__ = "1.0.0"
+__all__ = (
+    "__version__",
+    "FormulaSubstitutor",
+    "Interpreter",
+    "mangle_formula",
+    "MissingName",
+    "ParameterSet",
+    "PintInterpreter",
+    "PintParameterSet",
+    "PintWrapper",
+    "prefix_parameter_dict",
+    "substitute_in_formulas",
+)
 
-from .pint import PintWrapper
-from .interpreter import DefaultInterpreter, PintInterpreter
-from .interpreter import InterpreterChooser as Interpreter
+
+from .errors import MissingName
+from .interpreter import Interpreter, PintInterpreter
 from .mangling import (
     FormulaSubstitutor,
     mangle_formula,
     prefix_parameter_dict,
     substitute_in_formulas,
 )
-from .parameter_set import DefaultParameterSet, PintParameterSet
-from .parameter_set import ParameterSetChooser as ParameterSet
-from .errors import MissingName
-from .config import config
+from .parameter_set import ParameterSet, PintParameterSet
+from .pint import PintWrapper
+from .utils import get_version_tuple
+
+__version__ = get_version_tuple()
