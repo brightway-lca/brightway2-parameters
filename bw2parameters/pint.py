@@ -32,6 +32,12 @@ class PintWrapperSingleton:
                 (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
                 for a, b in pint.util._subs_re_list  # noqa
             ]
+            # fix to make sure ecoinvent-specific units "kilometer-year", "meter-year", "square meter-year"
+            # can be processed (otherwise minus is interpreted as literal subtraction operator)
+            self.ureg.preprocessors.append(
+                lambda x: x.replace("meter-year", "meter * year")
+            )
+            pint.util._subs_re = [(re.compile("meter-year"), "meter * year")] + pint.util._subs_re
 
     def to_unit(self, string, raise_errors=False):
         """Returns pint.Unit if the given string can be interpreted as a unit, returns None otherwise"""
