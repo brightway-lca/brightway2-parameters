@@ -13,7 +13,7 @@ class PintWrapperSingleton:
             cls.instance = super(PintWrapperSingleton, cls).__new__(cls)
         return cls.instance
 
-    def __init__(self, units_file: Path | str = UNITS_FILE):
+    def __init__(self, units_file=UNITS_FILE):
         if not hasattr(self, "string_preprocessor"):
             self.string_preprocessor = string_preprocessor
             self.ureg = UnitRegistry()
