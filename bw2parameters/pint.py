@@ -64,8 +64,7 @@ class PintWrapperSingleton:
     def is_quantity_from_same_registry(self, value):
         return isinstance(value, self.Quantity)
 
-    @classmethod
-    def get_dimensionality(cls, unit_name=None):
+    def get_dimensionality(self, unit_name=None):
         """
         Returns the dimensionality of the unit described by `unit_name`, e.g. {["mass"]: 1} for "kg" or
         {["length"]: 1, ["time"]: -1} for "m/s". Also makes sure the dimensions are sorted alphabetically.
@@ -73,7 +72,7 @@ class PintWrapperSingleton:
         if unit_name is None:
             return None
         else:
-            d = cls.to_unit(unit_name, raise_errors=True).dimensionality
+            d = self.to_unit(unit_name, raise_errors=True).dimensionality
             return {k: d[k] for k in sorted(d.keys())}
 
     def to_quantity(self, amount, unit=None):
