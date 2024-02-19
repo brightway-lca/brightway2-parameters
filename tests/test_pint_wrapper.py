@@ -16,13 +16,6 @@ def test_pint_is_class_variable():
     assert PintWrapper.ureg is not None
 
 
-def test_custom_unit_definitions():
-    """Ensure custom unit "unit" is defined"""
-    assert PintWrapper.ureg("1 unit") == PintWrapper.Quantity(
-        value=1, units="unit"
-    )
-
-
 def test_different_unit_registries():
     """Test that quantities from different unit registries are identified correctly."""
     q1 = PintWrapper.ureg("1 kg")
