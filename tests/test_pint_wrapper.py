@@ -31,3 +31,11 @@ def test_different_unit_registries():
     assert all(PintWrapper.is_quantity(q) for q in [q1, q2, q3])
     assert all(PintWrapper.is_quantity_from_same_registry(q) for q in [q1, q2])
     assert not PintWrapper.is_quantity_from_same_registry(q3)
+
+
+def test_dimension_order():
+    """Test that dimensionality key order is properly sorted"""
+    d1 = PintWrapper.get_dimensionality(unit_name="ton * kilometer")
+    d2 = PintWrapper.get_dimensionality(unit_name="kilometer * ton")
+    assert list(d1.keys()) == list(d2.keys())
+    assert list(d1.values()) == list(d2.values())
