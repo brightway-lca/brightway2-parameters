@@ -23,15 +23,6 @@ class PintWrapperSingleton:
             self.ureg.load_definitions(units_file)
             self.UndefinedUnitError = UndefinedUnitError
             self.DimensionalityError = DimensionalityError
-            # manual fix for pint parser (see https://github.com/hgrecco/pint/pull/1701)
-            pint.util._subs_re_list[-1] = (  # noqa
-                r"([\w\.\)])\s+(?=[\w\(])",
-                r"\1*",
-            )
-            pint.util._subs_re = [
-                (re.compile(a.format(r"[_a-zA-Z][_a-zA-Z0-9]*")), b)
-                for a, b in pint.util._subs_re_list  # noqa
-            ]
             # fix to make sure ecoinvent-specific units "kilometer-year", "meter-year", "square meter-year"
             # can be processed (otherwise minus is interpreted as literal subtraction operator)
             self.ureg.preprocessors.append(
