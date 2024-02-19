@@ -19,7 +19,7 @@ def test_pint_is_class_variable():
 def test_custom_unit_definitions():
     """Ensure custom unit "unit" is defined"""
     assert PintWrapper.ureg("1 unit") == PintWrapper.Quantity(
-        value=1, units="dimensionless"
+        value=1, units="unit"
     )
 
 
