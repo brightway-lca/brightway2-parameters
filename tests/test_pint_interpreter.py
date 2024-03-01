@@ -78,9 +78,10 @@ def test_eval():
     assert "g" not in i.symtable
     assert i("1 kg + 200 g") == ureg("1.2 kg")
     # test unit "unit" defined
-    assert i("1 unit") == PintWrapper.Quantity(1, "dimensionless")
+    assert i("1 unit") == PintWrapper.Quantity(1, "unit")
     # test formula without unit returns no quantity
     assert i("1+2") == 3
+    assert i("2 - 1") == 1
 
 
 def test_parameter_list_to_dict():
