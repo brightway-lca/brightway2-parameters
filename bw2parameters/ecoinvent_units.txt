@@ -1,7 +1,16 @@
-# default "ton" is interpreted as "short ton" (2000 pounds)
+# This file defines units, which can be found in the ecoinvent database
+# and are not understood by pint out of the box. Defining them manually
+# ensures that they can be parsed by bw2parameters. The definition syntax
+# is described in the pint user manual
+# (https://pint.readthedocs.io/en/stable/advanced/defining.html).
+# Short version: unit name = [unit dimensionality] or conversion formula
+# = (optional symbol) = aliases. A '_' in the third position is necessary
+# if no symbol is desired, but aliases should be defined.
+
+# pint defines "ton" as "short ton" (2000 pounds) by default
 ton = 1000 kg
 
-# ecoinvent specific stuff
+# ecoinvent specific units
 unit = [unit]
 person = [person] = _ = guest
 night = [time]
@@ -10,7 +19,7 @@ kilo = 1000
 Becquerel = becquerel
 Sm3 = [Sm3]
 
-# other useful definitions (feel free to add more)
+# other useful (non-ecoinvent) definitions (feel free to add more)
 percent = 1/100 = _ = pct
 ppm = 1/1e6
 m2 = m**2
