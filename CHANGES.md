@@ -1,4 +1,4 @@
-# parameters Changelog
+# `bw2parameters` Changelog
 
 ## 1.1.0 (2023-04-17)
 
